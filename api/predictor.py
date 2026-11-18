@@ -10,6 +10,7 @@ decoder arrive. When the artifacts appear, they are picked up automatically at s
 """
 import os, sys, json
 import numpy as np
+import pandas as pd
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, os.path.join(ROOT, "src"))
@@ -21,28 +22,30 @@ ART = os.path.join(ROOT, "artifacts")
 class Predictor:
     def __init__(self):
         self.model = self.scaler = self.decode = self.hmm_cfg = None
-        self.pipeline = "baseline (heuristic, no trained model)"
         mp = os.path.join(ART, "model.joblib")
         if os.path.exists(mp):
             import joblib
             self.model = joblib.load(mp)
             sp = os.path.join(ART, "scaler.joblib")
             self.scaler = joblib.load(sp) if os.path.exists(sp) else None
-            self.pipeline = "classifier"
-            hp = os.path.join(ART, "hmm_config.json")
-            if os.path.exists(hp):
-                try:
-                    from hmm import decode          # written by Track C
-                    self.decode = decode
-                    self.hmm_cfg = json.load(open(hp))
-                    self.pipeline = "classifier + HMM/Viterbi"
-                except Exception as e:              # fall back to classifier-only, but say so
-                    print(f"[predictor] HMM not loaded: {e!r}", flush=True)
+        hp = os.path.join(ART, "hmm_config.json")
+        if os.path.exists(hp):
+            try:
+                from hmm import decode
+                self.decode = decode
+                self.hmm_cfg = json.load(open(hp))
+            except Exception as e:                  # fall back to no-HMM, but say so
+                print(f"[predictor] HMM not loaded: {e!r}", flush=True)
+        base = "classifier" if self.model is not None else "baseline heuristic (no trained model)"
+        self.pipeline = base + (" + HMM/Viterbi" if self.decode is not None else "")
 
     def _scores(self, feats):
         if self.model is None:
-            # heuristic: close to the arc and heading along it
-            return (-feats["dist_m"].to_numpy() / 10.0 + 3.0 * feats["cos_head"].to_numpy()).astype(float)
+            # heuristic: close to the arc and heading along it, softmax-normalised per GPS point
+            s = pd.Series((-feats["dist_m"].to_numpy() / 10.0 + 3.0 * feats["cos_head"].to_numpy()).astype(float))
+            key = feats["point_idx"].to_numpy()
+            e = np.exp(s - s.groupby(key).transform("max"))
+            return (e / e.groupby(key).transform("sum")).to_numpy()
         X = feats[FEATURE_COLS].to_numpy()
         if self.scaler is not None:
             X = self.scaler.transform(X)

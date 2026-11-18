@@ -1,0 +1,11 @@
+{
+  "hop_penalty": 4.0,
+  "jump_penalty": 40.0,
+  "uturn_penalty": 16.0,
+  "max_hops": 5,
+  "gap_s": 120.0,
+  "gap_hop_s": 5.0,
+  "eps": 1e-06,
+  "tuned_on": "22 train trips, prob=mock",
+  "seed": 0
+}
