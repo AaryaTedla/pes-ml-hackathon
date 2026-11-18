@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#202d2a" />
+    <meta
+      name="description"
+      content="PathSnap — a workspace for matching GPS observations to the road."
+    />
+    <title>PathSnap · Route workspace</title>
+    <link
+      rel="preload"
+      href="vendor/fonts/dm-sans.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="vendor/fonts/manrope.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23202d2a'/%3E%3Cpath d='M10 29V11h12a6 6 0 010 12H10m10-6v12' fill='none' stroke='%23e9eea1' stroke-width='3'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="vendor/leaflet/leaflet.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace">Skip to workspace</a>
+    <header class="masthead">
+      <a class="brand" href="./" aria-label="PathSnap home">
+        <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+          <path d="M9 30V10h13a7 7 0 010 14H9m12-7v13" />
+        </svg>
+        <span>PathSnap<span class="brand-dot">.</span></span>
+      </a>
+      <div class="masthead-caption">
+        <span class="tiny-line"></span>THE ROUTE WORKSPACE
+      </div>
+      <button
+        class="connection-button"
+        id="connection-toggle"
+        aria-expanded="false"
+        aria-controls="connection-panel"
+      >
+        <span class="status-dot" id="connection-dot"></span
+        ><span id="connection-label">Connecting</span
+        ><span aria-hidden="true">↗</span>
+      </button>
+    </header>
+
+    <section
+      class="connection-panel"
+      id="connection-panel"
+      hidden
+      aria-label="API connection"
+    >
+      <form id="connection-form">
+        <label for="api-url">API laptop address</label>
+        <div class="connection-fields">
+          <input
+            id="api-url"
+            type="url"
+            required
+            placeholder="http://192.168.1.10:8000"
+            spellcheck="false"
+          /><button class="button dark" type="submit">
+            Connect <span aria-hidden="true">↗</span>
+          </button>
+        </div>
+        <p>
+          On laptop 2, enter laptop 1’s Wi-Fi IPv4 address and API port. Both
+          laptops must be on the same network.
+        </p>
+      </form>
+    </section>
+
+    <div class="shell">
+      <aside class="sidebar" aria-label="Trip selection">
+        <div class="sidebar-heading">
+          <span class="eyebrow">01 / TRIP LIBRARY</span
+          ><span class="count-badge" id="trip-count">—</span>
+        </div>
+        <h1>Every trip.<br />A path to follow.</h1>
+        <p class="sidebar-intro">
+          Choose a recording and find its place on the road.
+        </p>
+        <div class="trip-list" id="trip-list" aria-label="Available trips">
+          <p class="list-message">Connecting to your trip library…</p>
+        </div>
+        <div class="sidebar-foot">
+          <svg viewBox="0 0 40 40" aria-hidden="true">
+            <path d="M5 30l8-18 9 14 13-17M5 30h30" />
+            <circle cx="13" cy="12" r="3" />
+            <circle cx="35" cy="9" r="3" />
+          </svg>
+          <div>
+            <strong>Real observations. Real roads.</strong>
+            <p>Each recording has its own road network.</p>
+          </div>
+        </div>
+      </aside>
+
+      <main id="workspace" class="workspace">
+        <div class="workspace-heading">
+          <div>
+            <div class="eyebrow">02 / ROUTE EXPLORER</div>
+            <h2 id="workspace-title">From signal to street<span>.</span></h2>
+            <p id="workspace-subtitle">
+              Select a trip, then run a prediction to explore the route.
+            </p>
+          </div>
+          <button id="run-button" class="button run-button" disabled>
+            <span class="run-icon" aria-hidden="true">↗</span
+            ><span id="run-label">Run prediction</span>
+          </button>
+        </div>
+
+        <div id="notice" class="notice" role="status" hidden></div>
+        <div id="error" class="error" role="alert" hidden></div>
+
+        <section class="metrics" aria-label="Prediction metrics">
+          <article class="metric">
+            <div class="metric-label">
+              POINT ACCURACY
+              <span
+                title="Fraction of GPS points assigned to the same arc as the server-side reference alignment."
+                >↗</span
+              >
+            </div>
+            <div class="metric-value" id="accuracy">—</div>
+            <div class="metric-note" id="accuracy-note">
+              Awaiting a prediction
+            </div>
+          </article>
+          <article class="metric">
+            <div class="metric-label">ROUTE CONTINUITY</div>
+            <div class="metric-value" id="continuity">—</div>
+            <div class="metric-note">Connected arc changes</div>
+          </article>
+          <article class="metric">
+            <div class="metric-label">GPS OBSERVATIONS</div>
+            <div class="metric-value" id="points">—</div>
+            <div class="metric-note" id="matched-note">
+              Points in this recording
+            </div>
+          </article>
+          <article class="metric">
+            <div class="metric-label">PROCESSING TIME</div>
+            <div class="metric-value" id="latency">—</div>
+            <div class="metric-note">Features, prediction & scoring</div>
+          </article>
+        </section>
+
+        <section class="map-card" aria-label="Route map">
+          <div class="map-toolbar">
+            <div class="map-title">
+              <span class="status-dot" id="map-dot"></span
+              ><span id="map-title">Geographical view</span>
+            </div>
+            <div class="map-actions">
+              <button id="fit-button" class="text-button" disabled>
+                <span aria-hidden="true">⌖</span> Fit route</button
+              ><span class="toolbar-divider"></span
+              ><button id="export-button" class="text-button" disabled>
+                <span aria-hidden="true">↓</span> Export result
+              </button>
+            </div>
+          </div>
+          <div class="map-stage">
+            <div
+              id="map"
+              role="region"
+              aria-label="Interactive map of GPS observations and predicted road segments"
+            ></div>
+            <div id="map-empty" class="map-empty">
+              <div class="contour contour-one"></div>
+              <div class="contour contour-two"></div>
+              <div class="contour contour-three"></div>
+              <svg class="empty-route" viewBox="0 0 200 100" aria-hidden="true">
+                <path
+                  d="M15 80h43q12 0 12-12V37q0-12 12-12h35q12 0 12 12v15q0 12 12 12h45"
+                />
+                <circle cx="15" cy="80" r="6" />
+                <circle cx="186" cy="64" r="6" /></svg
+              ><span class="eyebrow">A ROUTE STARTS WITH A SIGNAL</span>
+              <h3>The road is waiting.</h3>
+              <p>
+                Run a trip to see GPS observations<br />and their predicted road
+                segments.
+              </p>
+            </div>
+            <div class="map-loading" id="map-loading" hidden>
+              <span class="spinner"></span
+              ><strong>Finding the way through…</strong
+              ><span>Preparing features and matching this trip.</span>
+            </div>
+            <div class="map-legend" id="map-legend" hidden>
+              <label
+                ><input id="show-gps" type="checkbox" checked /><span
+                  class="legend-dot"
+                ></span
+                >GPS observations</label
+              ><label
+                ><input id="show-route" type="checkbox" checked /><span
+                  class="legend-line"
+                ></span
+                >Predicted route</label
+              ><span class="legend-endpoints">S / E &nbsp; start / end</span>
+            </div>
+            <div class="tile-notice" id="tile-notice" hidden>
+              Basemap unavailable. The GPS and route layers still work.
+            </div>
+          </div>
+          <div class="map-footer">
+            <span id="map-caption">Your next route, in context.</span
+            ><span class="coordinate-label">WGS 84 · LAT / LON</span>
+          </div>
+        </section>
+
+        <section class="run-detail" aria-label="Run details">
+          <div class="run-detail-label">
+            <span class="eyebrow">03 / RUN NOTES</span
+            ><span id="run-state" class="state-tag" role="status"
+              >READY WHEN YOU ARE</span
+            >
+          </div>
+          <div id="run-notes" class="run-notes">
+            <p>
+              One trip, one request. The map and metrics appear here when the
+              API returns your result.
+            </p>
+            <span class="notes-arrow" aria-hidden="true">↗</span>
+          </div>
+        </section>
+        <details class="technical-details" id="technical-details" hidden>
+          <summary>
+            Timing & scoring details <span aria-hidden="true">+</span>
+          </summary>
+          <div id="technical-content"></div>
+        </details>
+        <footer class="workspace-footer">
+          <span>PATHSNAP / PES ML HACKATHON</span
+          ><span>Observation → candidate → route</span>
+        </footer>
+      </main>
+    </div>
+    <noscript
+      ><p class="error">
+        Enable JavaScript to connect to the API and display routes.
+      </p></noscript
+    >
+  </body>
+</html>
