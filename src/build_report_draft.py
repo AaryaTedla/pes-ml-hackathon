@@ -59,6 +59,29 @@ route file, and a fresh clone of the public repository ran all 10 student_test t
 | Laptop-to-laptop connection (development mode) | A second laptop on the same Wi-Fi called the API on laptop 1 (port 8000); the requests appear in laptop 1's API log with the second laptop's client IP and matching request ids |
 | Final-mode demonstration on laptop 2 | **[NEEDED: repeat with `PATHSNAP_MODE=hmm` and capture the screenshots below]** |
 
+### 7.1 Final evaluation on the 10 hidden evaluator trips
+
+After all models and settings were frozen, the final pipeline (tuned Random Forest + multi-hop HMM, `PATHSNAP_MODE=hmm`) was run once through the live API on the 10 evaluator
+trips with `scripts/check_all_trips.py`. Nothing was tuned or changed after seeing these numbers. Values are rounded to three decimals as printed by the script.
+
+| Trip | GPS points | Accuracy, classifier alone | Accuracy, final (with HMM) | Route continuity |
+|---|---:|---:|---:|---:|
+| 00000015 | 6,854 | 0.671 | 0.897 | 0.837 |
+| 00000017 | 1,346 | 0.882 | 0.914 | 0.742 |
+| 00000023 | 458 | 0.941 | 0.941 | 0.887 |
+| 00000030 | 654 | 0.775 | 0.839 | 0.810 |
+| 00000049 | 2,642 | 0.981 | 0.991 | 0.954 |
+| 00000059 | 1,031 | 0.919 | 0.942 | 0.813 |
+| 00000067 | 916 | 0.938 | 0.957 | 0.962 |
+| 00000073 | 1,144 | 0.958 | 0.974 | 0.961 |
+| 00000087 | 1,399 | 0.940 | 0.983 | 0.968 |
+| 00000094 | 3,230 | 0.907 | 0.945 | 0.920 |
+| **Mean over the 10 trips** | | **0.891** | **0.938** | **0.885** |
+
+The HMM improved accuracy on 9 of the 10 trips, left one unchanged (trip 00000023) and made none worse. The largest gain is trip 00000015 (0.671 to 0.897). Each request took 0.14 to 0.70 s.
+These results are consistent with the development results (student_test 0.865 to 0.918, unseen training trips 0.878 to 0.941), so we see no sign that we overfitted to the development data.
+Accuracy is measured against the reference route aligned to the GPS points, which is a derived reference and not independently verified truth.
+
 **[NEEDED: Figure 7-A]** Laptop 2 UI showing a completed trip (GPS, predicted route, metrics) with the pipeline shown as `classifier + HMM/Viterbi`.
 
 **[NEEDED: Figure 7-B]** Laptop 1 API terminal showing the matching request id, the second laptop's client IP, trip, number of points, time and accuracy.
@@ -71,11 +94,20 @@ SEC8 = """
 ## 8. Academic integrity and AI assistance
 
 All reported numbers come from committed result files and can be regenerated with the scripts listed in the repository README. Learned preprocessing was
-fitted on training data only, cross-validation folds are grouped by trip, the evaluator trips were never opened during development, and the reference route is
-never used by the prediction path.
+fitted on training data only, cross-validation folds are grouped by trip, the evaluator trips were never opened during development (they were first used for the
+single final evaluation in section 7.1), and the reference route is never used by the prediction path. Reference labels are derived by aligning GPS points to the
+supplied route and are not independently verified truth. No work was shared with other teams.
 
-**[NEEDED: AI-use disclosure.]** The event policy requires each member to state which AI tools helped with which parts of the work (for example code, tests,
-report drafting) and what they checked themselves. Each member should write their own entry here and be able to explain their code, experiments and results.
+**AI-use disclosure (draft for each member to confirm or correct; the event policy requires it to be accurate).**
+
+- **PES1UG24CS497:** an AI coding assistant (Anthropic Claude, used through Claude Code) helped implement and test the data loader, candidate generation, route-based labelling,
+  feature extraction, EDA, the multi-hop HMM decoder and its evaluation and tuning scripts, the API integration, the report-generation scripts, and drafted report sections 2.2, 5 and 6.
+  **[497: add what you personally ran, checked and can explain.]**
+- **PES1UG24CS548:** per the draft in the report skeleton, an AI assistant (OpenAI Codex) helped with the API, UI, tests, setup documentation and the report skeleton. **[548 to confirm.]**
+- **PES1UG24CS496:** **[496 to state the AI tools used, if any, for the training code, experiments and the report text in sections 3 and 4.]**
+- **PES1UG24CS549:** per the repository notes, AI assistance was used for the fixed-transition decoder, its evaluation, the figure generator and report text. **[549 to confirm and name the tool.]**
+
+Each member must be able to explain the code, experiments and results of their own part.
 """
 
 
@@ -94,14 +126,21 @@ def main():
                  ("folium_map_train_00000001", "Figure 2.7: Folium map of train trip 00000001 (GPS, road network, reference route)"),
                  ("folium_map_train_00000054", "Figure 2.8: Folium map of train trip 00000054, whose reference route runs about 140 m from the GPS corridor")]:
         parts.append(img(f"results/figures/{f}.png", c))
+    models_md = read("section_3_4_models.md")
+    cut = models_md.index("## Bayesian hyperparameter optimisation")
+    part_a = models_md[models_md.index("## Experimental protocol"):cut]
+    part_a = re.sub(r"(?m)^## ", "### ", part_a)
+    part_b = models_md[cut:].replace("## Bayesian hyperparameter optimisation", "# 4. Bayesian hyperparameter optimisation", 1)
     parts.append("\n# 3. Model experimentation and comparison\n")
+    parts.append(part_a)
     parts.append(read("section_3_1_table.md"))
-    parts.append(read("section_3_4_models.md"))
+    parts.append(read("section_3_2_per_model.md"))
     parts.append("\n### 3.3 Model visualisations (student-test and cross-validation results)\n")
     for f, c in [("top1", "Figure 3.1: per-point Top-1 accuracy by model"), ("macro_f1", "Figure 3.2: macro-F1 by model"), ("log_loss", "Figure 3.3: log loss by model")]:
         parts.append(img(f"results/models/model_comparison/plots/{f}.png", c))
-    parts.append("\nOnly the MLP produces an epoch-wise training history (`results/models/model_comparison/MLP_loss_curve.csv`); no curves are drawn for the other models. "
-                 "**[NEEDED: per-model answers to the compulsory questions A, B and C of section 3.2 (suitability, hyperparameters and loss, results, over- or under-fitting evidence), written by the model owner.]**\n")
+    parts.append("\nOnly the MLP produces an epoch-wise training history (`results/models/model_comparison/MLP_loss_curve.csv` and `MLP_grouped_early_stopping.csv`); "
+                 "no curves are drawn for the other models. Per-model confusion matrices are given in section 3.2 and in `results/models/model_comparison/metrics.csv`.\n")
+    parts.append(part_b)
     parts.append(read("section_5_hmm.md"))
     parts.append(read("section_6_hmm_figures.md"))
     parts.append(SEC7)

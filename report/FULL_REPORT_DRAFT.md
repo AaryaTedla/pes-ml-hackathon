@@ -140,27 +140,7 @@ The nearest-arc baseline (top-1 distance choice) is only about 51% correct, whic
 # 3. Model experimentation and comparison
 
 
-### 3.1 Overall model comparison
-
-Cross-validation: 3-fold GroupKFold by trip on 40 whole training trips (seed 42). Student-test: the 10 student_test trips, all 244,176 candidate rows. Top-1 is per-point (highest-probability candidate vs the derived reference arc). Macro-F1 and log loss are binary candidate metrics at threshold 0.5. Route continuity is the classifier alone (no HMM) on student_test, using the shared metric in `src/evaluate.py`; it is not an HMM result. Source: `results/models/model_comparison/comparison.csv` and `results/models/route_continuity_by_model.csv`.
-
-| Model | Algorithm family | Key configuration | CV macro-F1 | Top-1 (CV / student-test) | Route continuity (student-test, classifier only) | Student-test macro-F1 | Log loss (CV / student-test) | Inference time, student-test (s) |
-|---|---|---|---:|---:|---:|---:|---:|---:|
-| Logistic Regression | Linear / probabilistic | StandardScaler, max_iter=200, binary log-loss | 0.8784 | 0.8269 / 0.8506 | 0.7383 | 0.8995 | 0.1202 / 0.0780 | 0.15 |
-| LightGBM | Boosting | 300 trees, learning_rate=0.1, num_leaves=63, binary log-loss | 0.9067 | 0.8327 / 0.8488 | 0.6821 | 0.9163 | 0.1447 / 0.0999 | 1.38 |
-| Random Forest | Bagged trees (ensemble) | 100 trees, max_depth=18, min_samples_leaf=20, Gini; capped at 300k fitting rows | 0.9066 | 0.8377 / 0.8535 | 0.7449 | 0.9178 | 0.0977 / 0.0575 | 2.22 |
-| MLP | Neural network | hidden (64,32), batch 2048, up to 30 epochs, Adam; capped at 300k fitting rows | 0.9012 | 0.8301 / 0.8561 | 0.7757 | 0.9159 | 0.0871 / 0.0594 | 0.33 |
-| KNN | Instance-based | k=25, distance-weighted, ball-tree, StandardScaler; capped at 150k fitting rows | 0.8847 | 0.8088 / 0.8274 | 0.7624 | 0.9004 | 0.2261 / 0.1088 | 448.41 |
-
-Nearest-arc baseline Top-1: 0.5123 (CV mean), 0.5081 (student-test). Per-fold Top-1 standard deviation is 0.012 to 0.019, larger than the gaps between the top three models, so the ranking is narrow. Inference time covers candidate scoring only (not feature generation or HMM decoding); KNN's cheap fit hides its slow prediction.
-
-
-# Track B: model comparison and Bayesian optimisation
-
-Owner: Aarya, PES1UG24CS496. All values below come from
-`results/models/model_comparison/` and `results/models/rf_tuning/`.
-
-## Experimental protocol
+### Experimental protocol
 
 The deadline experiment used seed 42 to select 40 complete training trips.
 After retaining pt_has_pos=1, 1,103,014 candidate rows were available. The 18
@@ -179,7 +159,7 @@ The rebuilt training table's 210-point coverage discrepancy is documented in
 the training provenance file. This run does not use all 80 available training
 trips; that limitation should remain explicit in the final report.
 
-## Comparison
+### Comparison
 
 The predefined rule selected highest mean fold-level point Top-1, with lower
 mean candidate log loss breaking exact ties. Student-test did not choose the
@@ -213,7 +193,7 @@ decisions. Actual confusion matrices, precision and recall are in metrics.csv.
 These times cover fitting or candidate scoring, not feature generation or HMM
 decoding. KNN's cheap fit hides its expensive neighbour search during prediction.
 
-## Model configurations and interpretation
+### Model configurations and interpretation
 
 - Logistic Regression: scaled inputs, max_iter=200, binary log-loss objective.
   It gives a fast linear baseline, but cannot directly represent complex
@@ -242,32 +222,76 @@ this alone establishes neither absence of overfitting nor proof of underfitting.
 The report should not invent training-validation gaps absent logged evidence.
 Route continuity and HMM sequence results belong to the decoder experiments.
 
-## Bayesian hyperparameter optimisation
 
-The selected RF was tuned with Optuna TPE, minimising mean three-fold training
-CV log loss. The search covered max_depth in [10,22] and min_samples_leaf in
-[10,50], retaining 100 trees and the same fit caps. Of 25 requested trials,
-six completed before the timeout stopped further trials. The first five are
-startup trials; only the sixth uses the subsequent TPE proposal mechanism.
-Search time was 676.67 seconds because timeout checks occur between trials.
-An earlier interrupted study is preserved separately and is not counted as a
-completed 25-trial search. No evaluator data entered optimisation.
 
-Best trial: max_depth=12, min_samples_leaf=16, CV log loss=0.0807695.
+### 3.1 Overall model comparison
 
-| Metric | Untuned RF | Tuned RF |
-|---|---:|---:|
-| Mean CV Top-1 | **0.83765** | 0.83640 |
-| Mean CV log loss | 0.09774 | **0.08077** |
-| Student Top-1 | 0.85350 | **0.85402** |
-| Student macro-F1 | 0.91783 | **0.91802** |
-| Student log loss | **0.05753** | 0.05779 |
+Cross-validation: 3-fold GroupKFold by trip on 40 whole training trips (seed 42). Student-test: the 10 student_test trips, all 244,176 candidate rows. Top-1 is per-point (highest-probability candidate vs the derived reference arc). Macro-F1 and log loss are binary candidate metrics at threshold 0.5. Route continuity is the classifier alone (no HMM) on student_test, using the shared metric in `src/evaluate.py`; it is not an HMM result. Source: `results/models/model_comparison/comparison.csv` and `results/models/route_continuity_by_model.csv`.
 
-Tuning improved its CV objective but produced mixed generalisation results.
-Student point selection improved by 10 points out of 19,160, only 0.052
-percentage points; student log loss slightly worsened. The tuned artifact was
-selected on CV log loss, not by choosing whichever version looked better on
-student-test. No broad superiority or guaranteed calibration is claimed.
+| Model | Algorithm family | Key configuration | CV macro-F1 | Top-1 (CV / student-test) | Route continuity (student-test, classifier only) | Student-test macro-F1 | Log loss (CV / student-test) | Inference time, student-test (s) |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| Logistic Regression | Linear / probabilistic | StandardScaler, max_iter=200, binary log-loss | 0.8784 | 0.8269 / 0.8506 | 0.7383 | 0.8995 | 0.1202 / 0.0780 | 0.15 |
+| LightGBM | Boosting | 300 trees, learning_rate=0.1, num_leaves=63, binary log-loss | 0.9067 | 0.8327 / 0.8488 | 0.6821 | 0.9163 | 0.1447 / 0.0999 | 1.38 |
+| Random Forest | Bagged trees (ensemble) | 100 trees, max_depth=18, min_samples_leaf=20, Gini; capped at 300k fitting rows | 0.9066 | 0.8377 / 0.8535 | 0.7449 | 0.9178 | 0.0977 / 0.0575 | 2.22 |
+| MLP | Neural network | hidden (64,32), batch 2048, up to 30 epochs, Adam; capped at 300k fitting rows | 0.9012 | 0.8301 / 0.8561 | 0.7757 | 0.9159 | 0.0871 / 0.0594 | 0.33 |
+| KNN | Instance-based | k=25, distance-weighted, ball-tree, StandardScaler; capped at 150k fitting rows | 0.8847 | 0.8088 / 0.8274 | 0.7624 | 0.9004 | 0.2261 / 0.1088 | 448.41 |
+
+Nearest-arc baseline Top-1: 0.5123 (CV mean), 0.5081 (student-test). Per-fold Top-1 standard deviation is 0.012 to 0.019, larger than the gaps between the top three models, so the ranking is narrow. Inference time covers candidate scoring only (not feature generation or HMM decoding); KNN's cheap fit hides its slow prediction.
+
+
+### 3.2 Compulsory questions for every model
+
+Data for all answers: 3-fold cross-validation grouped by trip on 40 training trips (seed 42), then scoring on the 10 student_test trips
+(244,176 candidate rows, 19,160 GPS points, of which 19,135 rows are positive). Source files are in `results/models/model_comparison/`
+(`comparison.csv`, `metrics.csv`, `<Model>_config.json`). Precision and recall are macro-averaged over the two classes (not a correct/incorrect split of road ids).
+Statements marked *reasoning* are explanations we did not test with a separate experiment. Confusion matrices are written [[true negative, false positive], [false negative, true positive]].
+
+#### 3.2.1 Logistic Regression (linear / probabilistic)
+
+- **A1. Why suitable?** It is the simplest probabilistic model for "is this candidate road the correct one", so it shows how far a straight-line decision boundary on the 18 features gets us. It is a baseline, not an expected winner.
+- **A2. Strengths and limitations.** Fast (CV fit 4.4 s), stable, and its probabilities are reasonably well behaved (student-test log loss 0.078). A linear boundary cannot capture interactions such as "close to the road *and* heading along it", and it had the lowest CV macro-F1 (0.878).
+- **B5. Important hyperparameters (initial values).** L2 penalty, C = 1.0, lbfgs solver, max_iter = 200, inputs standardised.
+- **B6. Loss.** Binary cross-entropy (log loss) plus the L2 penalty.
+- **C7 and C8. Student-test results.** Top-1 0.8506, macro-F1 0.8995, log loss 0.0780, precision 0.909, recall 0.891; confusion matrix [[222,040, 3,001], [3,933, 15,202]].
+- **C9. Over- or underfitting?** No training-set scores were logged, so we cannot measure a train-validation gap. The lower macro-F1 than all non-linear models trained on the same rows is *consistent with underfitting* (too simple), and nothing suggests overfitting.
+
+#### 3.2.2 LightGBM (boosting)
+
+- **A1. Why suitable?** Boosted trees capture non-linear interactions between distance, heading and speed efficiently, and are a standard strong choice for tabular data.
+- **A2. Strengths and limitations.** Fast to fit (11.9 s) and strong at ranking candidates (CV macro-F1 0.907), but its probabilities were worse than the random forest's: CV log loss 0.145 (vs 0.098) and a wide fold range (0.091 to 0.215). That matters because the HMM multiplies these probabilities.
+- **B5. Important hyperparameters (initial values).** 300 trees, learning_rate 0.1, num_leaves 63, min_child_samples 20, no L1/L2 regularisation (reg_alpha = reg_lambda = 0), all rows used.
+- **B6. Loss.** Binary log loss (gradient boosting on the binary cross-entropy).
+- **C7 and C8. Student-test results.** Top-1 0.8488, macro-F1 0.9163, log loss 0.0999, precision 0.918, recall 0.915; confusion matrix [[222,172, 2,869], [3,013, 16,122]].
+- **C9. Over- or underfitting?** No training-set scores were logged, so a train-validation gap is not measured. The high log loss with good F1 and a wide fold range is *consistent with over-confident probabilities* (many leaves, no regularisation), not with underfitting. It is evidence about probability quality, not proof of overfitting.
+
+#### 3.2.3 Random Forest (bagged trees) - selected model
+
+- **A1. Why suitable?** Averaging many decorrelated trees handles non-linear interactions and noisy inputs without feature scaling, and gives a probability from the fraction of trees voting for the candidate.
+- **A2. Strengths and limitations.** Highest CV Top-1 (0.838) and the best student-test log loss (0.0575) among the five; stable. Slower to fit (37.7 s) and to score (2.2 s for 244k rows) than the linear model, and its probabilities are vote fractions, so calibration is not guaranteed.
+- **B5. Important hyperparameters (initial values).** 100 trees, max_depth 18, min_samples_leaf 20, max_features = sqrt, bootstrap, trained on up to 300,000 rows. After Optuna: max_depth 12, min_samples_leaf 16 (section 4).
+- **B6. Loss.** Splits minimise Gini impurity. There is no single global loss; tuning used cross-validated log loss.
+- **C7 and C8. Student-test results.** Top-1 0.8535, macro-F1 0.9178, log loss 0.0575, precision 0.932, recall 0.905; confusion matrix [[222,877, 2,164], [3,453, 15,682]].
+- **C9. Over- or underfitting?** Depth and leaf-size limits constrain complexity. No training-set score was logged. CV log loss varies a lot between folds (0.060 to 0.155), which shows sensitivity to *which trips are held out*. Student-test scores (Top-1 0.854, log loss 0.058) are better than the CV means (0.838, 0.098); with only 10 test trips we do not read that as proof of no overfitting.
+
+#### 3.2.4 MLP (neural network)
+
+- **A1. Why suitable?** A small network can learn smooth non-linear combinations of the features and was expected to give well-behaved probabilities.
+- **A2. Strengths and limitations.** Best CV log loss (0.0871), best student-test Top-1 (0.8561), and very fast to score (0.33 s). It needs scaled inputs and an epoch count chosen without peeking at the test trips; results depend on the random initialisation (seed fixed at 42).
+- **B5. Important hyperparameters (initial values).** Hidden layers (64, 32), ReLU, Adam with learning rate 0.001, L2 alpha 0.0001, batch size 2048, at most 30 epochs, trained on up to 300,000 rows. The final epoch count (15) was chosen on a held-out set of whole trips.
+- **B6. Loss.** Binary cross-entropy with L2 regularisation, optimised with Adam.
+- **C7 and C8. Student-test results.** Top-1 0.8561, macro-F1 0.9159, log loss 0.0594, precision 0.922, recall 0.910; confusion matrix [[222,436, 2,605], [3,235, 15,900]].
+- **C9. Over- or underfitting?** This is the only model with a logged training history (`MLP_grouped_early_stopping.csv`, `MLP_loss_curve.csv`). On the held-out whole trips the validation log loss was lowest at epoch 15 (0.1015) while the training loss at that epoch was 0.0697, a gap of about 0.03. That is a modest generalisation gap, and stopping at the validation minimum limits further overfitting. Training loss was still falling, so we did not see underfitting.
+
+#### 3.2.5 K-Nearest Neighbours (instance-based)
+
+- **A1. Why suitable?** Candidates with similar feature values (distance, heading, speed) should have similar labels, so a neighbour vote is a natural non-parametric baseline from a different algorithm family.
+- **A2. Strengths and limitations.** No training loop and almost no tuning, but prediction is very slow (448 s for the student-test rows, versus 0.15 to 2.2 s for the others) and it was the weakest model: CV Top-1 0.809, CV log loss 0.226. It is sensitive to feature scaling and its neighbour-vote probabilities are extreme (*reasoning*), which hurts log loss.
+- **B5. Important hyperparameters (initial values).** k = 25, distance-weighted votes, Euclidean (Minkowski p = 2) metric, ball-tree search, inputs standardised, trained on up to 150,000 rows and scored in chunks of 4,096.
+- **B6. Loss.** None: KNN has no training objective. Probabilities come from the weighted neighbour labels.
+- **C7 and C8. Student-test results.** Top-1 0.8274, macro-F1 0.9004, log loss 0.1088, precision 0.916, recall 0.887; confusion matrix [[222,374, 2,667], [4,116, 15,019]].
+- **C9. Over- or underfitting?** There is no training history to inspect and no training score was logged. Its CV and test scores are the weakest of the five on both ranking and log loss (CV Top-1 ranges from 0.80 to 0.83 across the three folds). This is *consistent with* a capped 150,000-row sample generalising poorly, but we cannot separate over- from underfitting here.
+
+**Plots and curves.** Only the MLP produces an epoch-wise training history (`MLP_loss_curve.csv`, `MLP_grouped_early_stopping.csv`); no curves are drawn for the other models. The Top-1, macro-F1 and log-loss comparison plots are in section 3.3.
 
 
 
@@ -293,7 +317,35 @@ student-test. No broad superiority or guaranteed calibration is claimed.
 
 
 
-Only the MLP produces an epoch-wise training history (`results/models/model_comparison/MLP_loss_curve.csv`); no curves are drawn for the other models. **[NEEDED: per-model answers to the compulsory questions A, B and C of section 3.2 (suitability, hyperparameters and loss, results, over- or under-fitting evidence), written by the model owner.]**
+Only the MLP produces an epoch-wise training history (`results/models/model_comparison/MLP_loss_curve.csv` and `MLP_grouped_early_stopping.csv`); no curves are drawn for the other models. Per-model confusion matrices are given in section 3.2 and in `results/models/model_comparison/metrics.csv`.
+
+
+# 4. Bayesian hyperparameter optimisation
+
+The selected RF was tuned with Optuna TPE, minimising mean three-fold training
+CV log loss. The search covered max_depth in [10,22] and min_samples_leaf in
+[10,50], retaining 100 trees and the same fit caps. Of 25 requested trials,
+six completed before the timeout stopped further trials. The first five are
+startup trials; only the sixth uses the subsequent TPE proposal mechanism.
+Search time was 676.67 seconds because timeout checks occur between trials.
+An earlier interrupted study is preserved separately and is not counted as a
+completed 25-trial search. No evaluator data entered optimisation.
+
+Best trial: max_depth=12, min_samples_leaf=16, CV log loss=0.0807695.
+
+| Metric | Untuned RF | Tuned RF |
+|---|---:|---:|
+| Mean CV Top-1 | **0.83765** | 0.83640 |
+| Mean CV log loss | 0.09774 | **0.08077** |
+| Student Top-1 | 0.85350 | **0.85402** |
+| Student macro-F1 | 0.91783 | **0.91802** |
+| Student log loss | **0.05753** | 0.05779 |
+
+Tuning improved its CV objective but produced mixed generalisation results.
+Student point selection improved by 10 points out of 19,160, only 0.052
+percentage points; student log loss slightly worsened. The tuned artifact was
+selected on CV log loss, not by choosing whichever version looked better on
+student-test. No broad superiority or guaranteed calibration is claimed.
 
 
 # 5. HMM and Viterbi Route Reconstruction
@@ -509,6 +561,29 @@ route file, and a fresh clone of the public repository ran all 10 student_test t
 | Laptop-to-laptop connection (development mode) | A second laptop on the same Wi-Fi called the API on laptop 1 (port 8000); the requests appear in laptop 1's API log with the second laptop's client IP and matching request ids |
 | Final-mode demonstration on laptop 2 | **[NEEDED: repeat with `PATHSNAP_MODE=hmm` and capture the screenshots below]** |
 
+### 7.1 Final evaluation on the 10 hidden evaluator trips
+
+After all models and settings were frozen, the final pipeline (tuned Random Forest + multi-hop HMM, `PATHSNAP_MODE=hmm`) was run once through the live API on the 10 evaluator
+trips with `scripts/check_all_trips.py`. Nothing was tuned or changed after seeing these numbers. Values are rounded to three decimals as printed by the script.
+
+| Trip | GPS points | Accuracy, classifier alone | Accuracy, final (with HMM) | Route continuity |
+|---|---:|---:|---:|---:|
+| 00000015 | 6,854 | 0.671 | 0.897 | 0.837 |
+| 00000017 | 1,346 | 0.882 | 0.914 | 0.742 |
+| 00000023 | 458 | 0.941 | 0.941 | 0.887 |
+| 00000030 | 654 | 0.775 | 0.839 | 0.810 |
+| 00000049 | 2,642 | 0.981 | 0.991 | 0.954 |
+| 00000059 | 1,031 | 0.919 | 0.942 | 0.813 |
+| 00000067 | 916 | 0.938 | 0.957 | 0.962 |
+| 00000073 | 1,144 | 0.958 | 0.974 | 0.961 |
+| 00000087 | 1,399 | 0.940 | 0.983 | 0.968 |
+| 00000094 | 3,230 | 0.907 | 0.945 | 0.920 |
+| **Mean over the 10 trips** | | **0.891** | **0.938** | **0.885** |
+
+The HMM improved accuracy on 9 of the 10 trips, left one unchanged (trip 00000023) and made none worse. The largest gain is trip 00000015 (0.671 to 0.897). Each request took 0.14 to 0.70 s.
+These results are consistent with the development results (student_test 0.865 to 0.918, unseen training trips 0.878 to 0.941), so we see no sign that we overfitted to the development data.
+Accuracy is measured against the reference route aligned to the GPS points, which is a derived reference and not independently verified truth.
+
 **[NEEDED: Figure 7-A]** Laptop 2 UI showing a completed trip (GPS, predicted route, metrics) with the pipeline shown as `classifier + HMM/Viterbi`.
 
 **[NEEDED: Figure 7-B]** Laptop 1 API terminal showing the matching request id, the second laptop's client IP, trip, number of points, time and accuracy.
@@ -521,8 +596,17 @@ A Windows firewall rule for TCP port 8000 and a shared network are required; `sc
 ## 8. Academic integrity and AI assistance
 
 All reported numbers come from committed result files and can be regenerated with the scripts listed in the repository README. Learned preprocessing was
-fitted on training data only, cross-validation folds are grouped by trip, the evaluator trips were never opened during development, and the reference route is
-never used by the prediction path.
+fitted on training data only, cross-validation folds are grouped by trip, the evaluator trips were never opened during development (they were first used for the
+single final evaluation in section 7.1), and the reference route is never used by the prediction path. Reference labels are derived by aligning GPS points to the
+supplied route and are not independently verified truth. No work was shared with other teams.
 
-**[NEEDED: AI-use disclosure.]** The event policy requires each member to state which AI tools helped with which parts of the work (for example code, tests,
-report drafting) and what they checked themselves. Each member should write their own entry here and be able to explain their code, experiments and results.
+**AI-use disclosure (draft for each member to confirm or correct; the event policy requires it to be accurate).**
+
+- **PES1UG24CS497:** an AI coding assistant (Anthropic Claude, used through Claude Code) helped implement and test the data loader, candidate generation, route-based labelling,
+  feature extraction, EDA, the multi-hop HMM decoder and its evaluation and tuning scripts, the API integration, the report-generation scripts, and drafted report sections 2.2, 5 and 6.
+  **[497: add what you personally ran, checked and can explain.]**
+- **PES1UG24CS548:** per the draft in the report skeleton, an AI assistant (OpenAI Codex) helped with the API, UI, tests, setup documentation and the report skeleton. **[548 to confirm.]**
+- **PES1UG24CS496:** **[496 to state the AI tools used, if any, for the training code, experiments and the report text in sections 3 and 4.]**
+- **PES1UG24CS549:** per the repository notes, AI assistance was used for the fixed-transition decoder, its evaluation, the figure generator and report text. **[549 to confirm and name the tool.]**
+
+Each member must be able to explain the code, experiments and results of their own part.
