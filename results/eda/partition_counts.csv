@@ -1,0 +1,14 @@
+,student_test,train
+trips,10,80
+gps_points,19160,208417
+total_nodes,90689,1933485
+total_arcs,185041,3876904
+invalid_gps,0,0
+nonmonotonic_t,0,0
+dup_points,0,6
+trips_with_gap_gt60s,1,22
+trips_with_route_breaks,1,10
+trips_disconnected_net,10,79
+trips_with_isolated_nodes,0,0
+trips_with_speed_jumps,3,39
+bad_route_ids,0,0
