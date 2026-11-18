@@ -16,7 +16,7 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, os.path.join(ROOT, "src"))
 from features import FEATURE_COLS
 
-ART = os.path.join(ROOT, "artifacts")
+ART = os.environ.get("PATHSNAP_ARTIFACTS", os.path.join(ROOT, "artifacts"))   # override only for tests
 
 
 class Predictor:
