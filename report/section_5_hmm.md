@@ -59,7 +59,7 @@ belong to a better complete sequence. Working with log scores avoids multiplying
 Training trips with a candidate miss rate above 5%, or with more than 8,000 points, are excluded, so the comparison does not cover every
 training trip or the longest trips. **Both decoders were tuned with the same coordinate search on the TUNE trips only, using the
 trained model's probabilities.** The search logs are `results/hmm/final/hmm_tuning_multihop_model.csv` and `results/hmm/final/hmm_tuning_fixed_model.csv`.
-VAL and student_test were not used to choose any setting. Evaluator trips were never used. (An earlier comparison on stand-in probabilities tuned the two
+VAL and student_test were not used to choose any setting. Note that VAL is held out from the decoder tuning but not completely from the whole system: 11 of its 22 trips (and 12 of the 22 TUNE trips) were also among the 40 trips used to train the classifier. The 10 student_test trips do not overlap with the classifier's training trips, so they are the cleaner held-out check for the full pipeline. Evaluator trips were never used. (An earlier comparison on stand-in probabilities tuned the two
 decoders on different trips; that limitation no longer applies.)
 
 **Metrics.** Point accuracy counts correct arc ids on points whose derived reference arc is within 60 m of the GPS point. Reference

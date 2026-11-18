@@ -79,7 +79,7 @@ trips with `scripts/check_all_trips.py`. Nothing was tuned or changed after seei
 | **Mean over the 10 trips** | | **0.891** | **0.938** | **0.885** |
 
 The HMM improved accuracy on 9 of the 10 trips, left one unchanged (trip 00000023) and made none worse. The largest gain is trip 00000015 (0.671 to 0.897). Each request took 0.14 to 0.70 s.
-These results are consistent with the development results (student_test 0.865 to 0.918, unseen training trips 0.878 to 0.941), so we see no sign that we overfitted to the development data.
+These results are consistent with the development results (student_test 0.865 to 0.918, training trips held out from decoder tuning 0.878 to 0.941, of which about half were also in the classifier's training subset), so we see no sign that we overfitted to the development data.
 Accuracy is measured against the reference route aligned to the GPS points, which is a derived reference and not independently verified truth.
 
 **[NEEDED: Figure 7-A]** Laptop 2 UI showing a completed trip (GPS, predicted route, metrics) with the pipeline shown as `classifier + HMM/Viterbi`.
@@ -145,7 +145,7 @@ def final_eval_section():
         f"{'Every' if (d.fraction_points_reference_covered > 0.999).all() else 'Nearly every'} point has its derived reference arc within 60 m, so accuracy on covered points equals overall accuracy. "
         "'Exact 50-point windows' is the fraction of non-overlapping 50-point stretches predicted entirely correctly. Route continuity is the fraction of changes in the predicted arc that are directly connected in the road network. "
         "Each request took 0.12 to 0.66 s. "
-        "These results are consistent with the development results (student_test 0.865 to 0.918, unseen training trips 0.878 to 0.941), so we see no sign that we overfitted to the development data. "
+        "These results are consistent with the development results (student_test 0.865 to 0.918, training trips held out from decoder tuning 0.878 to 0.941, of which about half were also in the classifier's training subset), so we see no sign that we overfitted to the development data. "
         "Accuracy is measured against the reference route aligned to the GPS points, which is a derived reference and not independently verified truth.\n")
 
 
