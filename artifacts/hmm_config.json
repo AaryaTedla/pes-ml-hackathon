@@ -1,0 +1,11 @@
+{
+  "sigma_m": 20.0,
+  "heading_weight": 2.0,
+  "beta_m": 30.0,
+  "gap_s": 30.0,
+  "max_speed_mps": 55.0,
+  "search_slack_m": 100.0,
+  "unreachable_penalty": 30.0,
+  "radius_m": 60.0,
+  "max_candidates": 12
+}
