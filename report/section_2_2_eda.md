@@ -37,7 +37,7 @@ trips were never opened.
   (median 20 in train, 11 in student_test). The largest component still holds a median of 98% of the nodes (minimum 69%). There are no isolated nodes (Fig. 05).
   About 95% of arcs have a reverse arc, so each physical road is usually two arcs at almost the same position.
 - **The reference route has limitations.** 10 train trips and 1 student_test trip have 1 to 3 places where consecutive route arcs are not connected.
-  In trips 54 and 33 the route does not cover the GPS track. For trip 54, 86% of points are more than 60 m from any route arc, even without the ordering constraint.
+  In trips 54 and 33 the route does not match the GPS track: for trip 54 the GPS follows the same ring road but 86% of points are more than 60 m (median 140 m) from any route arc, even without the ordering constraint.
   So the candidate miss rate is 10.73% in train, but 1.05% without these two trips, and 0.13% in student_test.
   We treat the route as a reference, not as independently verified truth (Fig. 06 and `map_train_00000054.html`).
 - **Missing values.** There are no NaN or invalid GPS values. The missing information is in the timing (gaps) and in the reference-route coverage described above.

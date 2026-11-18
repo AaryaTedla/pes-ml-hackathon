@@ -66,7 +66,7 @@ Miss = the point's reference arc is not in its candidate set (so the point has n
 
 All train points have at least 1 candidate. 59 of 80 train trips have zero misses. 9 of 10 student_test trips have zero misses (the 25 misses are all in trip 00000056).
 
-**The train number is dominated by two trips whose reference route does not cover the GPS track:**
+**The train number is dominated by two trips whose reference route does not match the GPS track (it runs along the same corridor but a median of about 140 m away on trip 54):**
 - `00000054`: 17,233 of 19,313 points have no positive. The route is 31 km against a 170 km GPS path, and 86% of points are more than 60 m from *any* route arc even when matching without ordering. This is a reference-route limitation, not a candidate bug.
 - `00000033`: 3,209 of 5,844 points. Same pattern.
 - `00000002`: 837 points, in two stretches (the last 541 points and 284 points mid-trip) where points are 100 to 280 m from the reference route.
