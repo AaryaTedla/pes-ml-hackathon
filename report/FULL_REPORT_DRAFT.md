@@ -317,7 +317,15 @@ Statements marked *reasoning* are explanations we did not test with a separate e
 
 
 
-Only the MLP produces an epoch-wise training history (`results/models/model_comparison/MLP_loss_curve.csv` and `MLP_grouped_early_stopping.csv`); no curves are drawn for the other models. Per-model confusion matrices are given in section 3.2 and in `results/models/model_comparison/metrics.csv`.
+![Figure 3.4: MLP training loss and validation log loss per epoch (inner holdout of whole trips, left) and the final fit's training loss (right). Only the MLP produces an epoch-wise history, so no loss curves are drawn for the other models. The validation loss is lowest at epoch 15 (0.1015) while the training loss there is 0.0697.](../results/figures/mlp_training_vs_validation_loss.png)
+
+*Figure 3.4: MLP training loss and validation log loss per epoch (inner holdout of whole trips, left) and the final fit's training loss (right). Only the MLP produces an epoch-wise history, so no loss curves are drawn for the other models. The validation loss is lowest at epoch 15 (0.1015) while the training loss there is 0.0697.*
+
+
+
+![Figure 3.5: candidate-level confusion matrices of the five models on the 10 student-test trips (optional diagnostic; numbers also in section 3.2 and `metrics.csv`).](../results/figures/confusion_matrices_student_test.png)
+
+*Figure 3.5: candidate-level confusion matrices of the five models on the 10 student-test trips (optional diagnostic; numbers also in section 3.2 and `metrics.csv`).*
 
 
 # 4. Bayesian hyperparameter optimisation
@@ -346,6 +354,18 @@ Student point selection improved by 10 points out of 19,160, only 0.052
 percentage points; student log loss slightly worsened. The tuned artifact was
 selected on CV log loss, not by choosing whichever version looked better on
 student-test. No broad superiority or guaranteed calibration is claimed.
+
+
+
+**Further items required by the deliverables (same partitions as above).**
+
+| Measure | Untuned RF | Tuned RF |
+|---|---:|---:|
+| Mean CV macro-F1 | 0.90664 | not recorded for the tuned model (the search logged fold log loss and Top-1 only) |
+| Student-test inference time for 244,176 rows (s) | 2.27 | 2.21 |
+| Final fit time on 40 trips (s) | 39.1 | 34.3 |
+
+**What was tuned, and what was not.** Only two Random Forest settings were searched: `max_depth` (integers 10 to 22) and `min_samples_leaf` (integers 10 to 50). Everything else stayed fixed: 100 trees, `max_features = sqrt`, bootstrap sampling, Gini splits and the 300,000-row fitting cap. Search spaces for the other four models exist in the training code (LightGBM: leaves, learning rate, minimum child samples, feature fraction, L2, number of trees; Logistic Regression: C; MLP: alpha and initial learning rate; KNN: number of neighbours) but they were **not run**, because Random Forest was selected first. The HMM decoder settings were tuned separately, in section 5.
 
 
 # 5. HMM and Viterbi Route Reconstruction

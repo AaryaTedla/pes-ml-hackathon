@@ -113,6 +113,25 @@ Each member must be able to explain the code, experiments and results of their o
 
 
 
+
+def tuning_extra():
+    """Deliverables section 4: add inference time and CV macro-F1 to the tuned-vs-untuned comparison (from saved files)."""
+    import pandas as pd
+    tu = pd.read_csv(os.path.join(ROOT, "results", "models", "rf_tuning", "tuned_vs_untuned.csv")).set_index("version")
+    cmp_ = pd.read_csv(os.path.join(ROOT, "results", "models", "model_comparison", "comparison.csv")).set_index("model")
+    cv_f1 = float(cmp_.loc["RandomForest", "cv_macro_f1"])
+    return ("\n**Further items required by the deliverables (same partitions as above).**\n\n"
+            "| Measure | Untuned RF | Tuned RF |\n|---|---:|---:|\n"
+            f"| Mean CV macro-F1 | {cv_f1:.5f} | not recorded for the tuned model (the search logged fold log loss and Top-1 only) |\n"
+            f"| Student-test inference time for 244,176 rows (s) | {tu.loc['untuned', 'inference_seconds']:.2f} | {tu.loc['tuned', 'inference_seconds']:.2f} |\n"
+            f"| Final fit time on 40 trips (s) | {tu.loc['untuned', 'fit_seconds']:.1f} | {tu.loc['tuned', 'fit_seconds']:.1f} |\n\n"
+            "**What was tuned, and what was not.** Only two Random Forest settings were searched: `max_depth` (integers 10 to 22) and `min_samples_leaf` (integers 10 to 50). "
+            "Everything else stayed fixed: 100 trees, `max_features = sqrt`, bootstrap sampling, Gini splits and the 300,000-row fitting cap. "
+            "Search spaces for the other four models exist in the training code (LightGBM: leaves, learning rate, minimum child samples, feature fraction, L2, number of trees; "
+            "Logistic Regression: C; MLP: alpha and initial learning rate; KNN: number of neighbours) but they were **not run**, because Random Forest was selected first. "
+            "The HMM decoder settings were tuned separately, in section 5.\n")
+
+
 def final_eval_section():
     """Section 7.1 generated from results/hmm/final/evaluator_trips_results.csv (no hand-typed numbers)."""
     path = os.path.join(ROOT, "results", "hmm", "final", "evaluator_trips_results.csv")
@@ -197,9 +216,13 @@ def main():
     parts.append("\n### 3.3 Model visualisations (student-test and cross-validation results)\n")
     for f, c in [("top1", "Figure 3.1: per-point Top-1 accuracy by model"), ("macro_f1", "Figure 3.2: macro-F1 by model"), ("log_loss", "Figure 3.3: log loss by model")]:
         parts.append(img(f"results/models/model_comparison/plots/{f}.png", c))
-    parts.append("\nOnly the MLP produces an epoch-wise training history (`results/models/model_comparison/MLP_loss_curve.csv` and `MLP_grouped_early_stopping.csv`); "
-                 "no curves are drawn for the other models. Per-model confusion matrices are given in section 3.2 and in `results/models/model_comparison/metrics.csv`.\n")
+    parts.append(img("results/figures/mlp_training_vs_validation_loss.png",
+                     "Figure 3.4: MLP training loss and validation log loss per epoch (inner holdout of whole trips, left) and the final fit's training loss (right). "
+                     "Only the MLP produces an epoch-wise history, so no loss curves are drawn for the other models. The validation loss is lowest at epoch 15 (0.1015) while the training loss there is 0.0697."))
+    parts.append(img("results/figures/confusion_matrices_student_test.png",
+                     "Figure 3.5: candidate-level confusion matrices of the five models on the 10 student-test trips (optional diagnostic; numbers also in section 3.2 and `metrics.csv`)."))
     parts.append(part_b)
+    parts.append(tuning_extra())
     parts.append(read("section_5_hmm.md"))
     parts.append(read("section_6_hmm_figures.md"))
     sec7 = SEC7
