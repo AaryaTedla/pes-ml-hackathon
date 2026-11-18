@@ -19,6 +19,7 @@ from hmm import decode as multihop
 from hmm_fixed import decode as fixed
 from evaluate import pointwise_accuracy, route_continuity
 from viz import make_trip_map
+from eval_hmm import load_model, model_probabilities
 
 
 def main():
@@ -27,6 +28,9 @@ def main():
     ap.add_argument('--tag', required=True)
     ap.add_argument('--screenshots', action='store_true')
     ap.add_argument('--browser')
+    ap.add_argument('--prob', choices=['mock', 'model'], default='model')
+    ap.add_argument('--improve-trip', default='00000010')
+    ap.add_argument('--regress-trip', default='00000078')
     args = ap.parse_args()
     if not re.fullmatch(r'[a-zA-Z0-9_-]+', args.tag):
         ap.error('tag must contain letters, digits, underscores or hyphens')
@@ -38,17 +42,22 @@ def main():
     labels = pd.read_parquet(root/'results/points_train.parquet')
     configs = {name: json.loads((root/f'artifacts/{filename}').read_text()) for name, filename in
                [('fixed','hmm_fixed_config.json'), ('multihop','hmm_config.json')]}
-    manifest = dict(probabilities='mock softmax(-dist_m/10 + 3*cos_head)',
+    manifest = dict(probabilities=('mock softmax(-dist_m/10 + 3*cos_head)' if args.prob == 'mock' else 'artifacts/model.joblib positive-class probabilities'),
                     source_commit=subprocess.check_output(['git','rev-parse','HEAD'], cwd=root,text=True).strip(),
-                    configs=configs, cases=[], note='Report-only reference layers; no evaluator data. Accuracy mask: label_dist_m <= 60. Continuity: changed arcs, shared evaluate.py. Both cases are multi-hop TUNE trips; illustrations, not held-out evidence.')
+                    configs=configs, cases=[], note='Report-only reference layers; no evaluator data. Accuracy mask: label_dist_m <= 60. Continuity: changed arcs, shared evaluate.py. Illustrative training trips (their TUNE or VAL split is stated in the report); not evaluator data.')
+    model_obj, scaler_obj = (None, None) if args.prob == 'mock' else load_model()
+    prob_note = ('Mock probabilities' if args.prob == 'mock' else 'Trained Random Forest probabilities') + '; derived reference labels. Training trips; see the report text for which split each trip belongs to.'
     pages = []
-    for tid in ['00000010', '00000078']:
+    for tid in [args.improve_trip, args.regress_trip]:
         trip_dir = Path(args.data_root)/'train'/tid
         trip, feats, _ = prepare_trip(trip_dir)
-        logits = (-feats.dist_m/10 + 3*feats.cos_head).to_numpy(float)
-        groups = feats.point_idx.to_numpy()
-        weights = np.exp(logits - pd.Series(logits).groupby(groups).transform('max').to_numpy())
-        feats['prob'] = weights/pd.Series(weights).groupby(groups).transform('sum').to_numpy()
+        if args.prob == 'mock':
+            logits = (-feats.dist_m/10 + 3*feats.cos_head).to_numpy(float)
+            groups = feats.point_idx.to_numpy()
+            weights = np.exp(logits - pd.Series(logits).groupby(groups).transform('max').to_numpy())
+            feats['prob'] = weights/pd.Series(weights).groupby(groups).transform('sum').to_numpy()
+        else:
+            feats['prob'] = model_probabilities(model_obj, scaler_obj, feats)
         pi, ai, prob = [feats[c].to_numpy() for c in ['point_idx','arc_id','prob']]
         order=np.lexsort((-prob,pi)); first=np.r_[True,pi[order][1:]!=pi[order][:-1]]
         baseline=np.full(len(trip['track']),-1,dtype=int)
@@ -62,12 +71,12 @@ def main():
         true=truth.true_arc.to_numpy(); covered=truth.label_dist_m.to_numpy()<=60
         corrected=(baseline!=true)&(preds['fixed']==true)&covered
         regressed=(baseline==true)&(preds['fixed']!=true)&covered
-        target=corrected if tid=='00000010' else regressed
+        target=corrected if tid==args.improve_trip else regressed
         # Choose the 41-observation window containing the most target changes.
         center=int(np.argmax(np.convolve(target.astype(int),np.ones(41,dtype=int),mode='same')))
         lo,hi=max(0,center-20),min(len(baseline),center+21)
         # Include the actual arcs so a displaced GPS point cannot hide the road choice.
-        ids=np.unique(np.r_[true[lo:hi],*[p[lo:hi] for p in preds.values()]])
+        ids=np.unique(np.concatenate([true[lo:hi]] + [p[lo:hi] for p in preds.values()]))
         ids=ids[ids>=0]
         coords=np.vstack([trip['track'][lo:hi,:2],trip['nodes'][np.unique(trip['arcs'][ids])]])
         pad=.0003
@@ -94,9 +103,10 @@ def main():
             children.append((filename,label,accuracy,continuity))
             case['files'].append(filename)
         filename=f'hmm_{args.tag}_{tid}_comparison.html'
-        title='HMM improvement example' if tid=='00000010' else 'Fixed-transition failure example'
+        title='HMM improvement example' if tid==args.improve_trip else 'Fixed-transition failure example'
         cards=''.join(f'<section><h2>{label}</h2><p>Accuracy {acc:.2%} &nbsp; Direct continuity {cont:.2%}</p><iframe title="{label}" src="{file}"></iframe></section>' for file,label,acc,cont in children)
         document='<!doctype html><html><head><meta charset="utf-8"><title>'+title+'</title><style>body{margin:0;font:15px Arial;background:#f5f7fa;color:#17212b}header{padding:18px 24px 12px}h1{margin:0 0 7px;font-size:25px}header p{margin:4px 0}main{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 12px}section{background:white;border:1px solid #cbd5df;border-radius:6px;overflow:hidden}h2{font-size:18px;margin:12px 14px 6px}section p{margin:0 14px 10px;font-size:14px}iframe{width:100%;height:calc(100vh - 230px);min-height:480px;border:0}a{color:#124ca0}</style></head><body><header><h1>'+title+' | train '+tid+'</h1><p>Mock probabilities; derived reference labels. Both examples are multi-hop TUNE trips.</p><p>Blue dots: GPS. Grey: nearby roads. Green: reference. Red: predicted arcs. Toggle layers to inspect overlap.</p><p><a href="?view=overview">Full trip</a> &nbsp;|&nbsp; <a href="?view=detail">Detail: points '+str(lo)+'-'+str(hi-1)+'</a></p></header><main>'+cards+'</main><script>if(new URLSearchParams(location.search).get("view")==="detail"){document.querySelectorAll("iframe").forEach(f=>f.src=f.getAttribute("src")+"?view=detail");}</script></body></html>'
+        document=document.replace('Mock probabilities; derived reference labels. Both examples are multi-hop TUNE trips.', prob_note)
         document=document.replace('Toggle layers to inspect overlap.',
             'Orange rings: wrong arc vs derived reference (including reverse-direction errors). Offline: no external basemap.')
         (out/filename).write_text(document,encoding='utf-8')

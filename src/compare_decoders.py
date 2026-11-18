@@ -35,6 +35,7 @@ def main():
             rows.append(dict(prob_source=a.prob, decoder=name, split=split, trips=len(df),
                              acc_classifier_only=df.acc_clf.mean(), acc_hmm=df.acc_hmm.mean(),
                              continuity_classifier_only=df.cont_clf.mean(), continuity_hmm=df.cont_hmm.mean(),
+                             seq50_exact_classifier_only=df.seq50_clf.mean(), seq50_exact_hmm=df.seq50_hmm.mean(),
                              trips_better=int((df.acc_hmm > df.acc_clf).sum()),
                              trips_worse=int((df.acc_hmm < df.acc_clf - 0.005).sum()),
                              hmm_seconds=df.hmm_runtime_s.sum()))

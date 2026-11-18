@@ -1,77 +1,62 @@
-# HMM map figures for sections 5 and 6
+# 6. Geographical visualisation: HMM map figures
 
-These are report-only training-trip illustrations with mock probabilities. They
-include reference routes and must not be used as API/UI response artifacts.
-Both examples are in the multi-hop TUNE set; they do not demonstrate held-out
-performance. No evaluator trips were read.
+These are report-only illustrations made with the trained model's probabilities (`artifacts/model.joblib`) and the tuned
+decoder settings. They include the reference route, so they must not be used as API or UI artifacts. Both examples are training
+trips, and their split is stated below. They illustrate behaviour and are not held-out evidence. No evaluator trips were read.
 
-Each comparison has classifier-only, fixed-HMM and API multi-hop-HMM panels.
-Every panel includes GPS points, nearby road arcs, supplied reference route,
-predicted arcs, start/end markers, a legend and layer control. Orange rings mark
-points whose selected arc differs from the derived reference label, using the
-same <=60 m reference-distance mask as the report comparison. Reverse arcs can
-have identical geometry; the rings reveal errors that route lines alone hide.
-Map accuracy labels describe the whole trip, including when the view is zoomed.
+Each comparison has three panels: classifier only, fixed-transition HMM and multi-hop HMM (the one the API uses). Every panel shows
+the GPS points (blue), nearby road arcs (grey), the supplied reference route (green halo), the predicted arcs (red), start and end markers, a legend and
+a layer control. Orange rings mark points whose chosen arc differs from the derived reference label, using the same 60 m mask as section 5.
+Reverse-direction arcs can have identical geometry, so the rings show errors that route lines alone hide. The accuracy and continuity in each
+panel heading are whole-trip values, not values for the zoomed window. The maps use the repository's local Leaflet files and no external
+basemap (the grey background is intentional; the roads drawn are the supplied trip network).
 
-## Improvement: train 00000010
+## Improvement example: train trip 00000004 (VAL split)
 
-Accuracy: classifier 48.40%, fixed HMM 74.73%, multi-hop HMM 84.47%.
-The fixed decoder corrects 831 classifier errors but introduces 117 others.
-This illustrates the net improvement without implying every change helped.
+| Pipeline | Whole-trip accuracy | Direct continuity |
+|---|---:|---:|
+| Classifier only | 65.13% | 51.05% |
+| Fixed HMM | 85.62% | 91.35% |
+| Multi-hop HMM | 91.07% | 77.17% |
 
-[Interactive comparison](../results/maps/hmm_mock_20261118_v3_00000010_comparison.html)
+The fixed decoder corrects 239 classifier errors and introduces 21 others. The detail window (points 291 to 331) is the 41-point stretch with
+the most points corrected by fixed decoding. It is an illustrative selected region, not a random sample.
 
-![Trip 10 overview: classifier and both decoders](../results/maps/hmm_mock_20261118_v3_00000010_comparison_overview.png)
+[Interactive comparison](../results/maps/hmm_model_20261118_v1_00000004_comparison.html)
 
-![Trip 10 detail: points 856-896](../results/maps/hmm_mock_20261118_v3_00000010_comparison_detail.png)
+![Trip 4 overview](../results/maps/hmm_model_20261118_v1_00000004_comparison_overview.png)
 
-Detail caption: this 41-observation window was selected because it has the most
-points corrected by fixed decoding. It is an illustrative selected region, not
-a randomly sampled evaluation. Compare the orange error rings across panels.
+![Trip 4 detail, points 291-331](../results/maps/hmm_model_20261118_v1_00000004_comparison_detail.png)
 
-## Regression: train 00000078
+## Fixed-transition regression: train trip 00000078 (TUNE split)
 
-Accuracy: classifier 82.09%, fixed HMM 80.47%, multi-hop HMM 86.49%.
-Fixed transitions correct 144 classifier errors but introduce 191 others, a net
-loss of 47 correct point assignments. Higher direct continuity (76.98% to 95.37%)
-does not imply higher accuracy. These are observed label changes; the figures do
-not establish the physical cause of each error.
+| Pipeline | Whole-trip accuracy | Direct continuity |
+|---|---:|---:|
+| Classifier only | 92.16% | 76.71% |
+| Fixed HMM | 90.75% | 95.34% |
+| Multi-hop HMM | 96.80% | 82.88% |
 
-[Interactive comparison](../results/maps/hmm_mock_20261118_v3_00000078_comparison.html)
+The fixed decoder corrects 123 classifier errors but introduces 164, a net loss of 41 correct point assignments, even though direct continuity rises.
+The detail window (points 2532 to 2572) is the stretch with the most points where the classifier is right and fixed decoding is wrong. Some errors are
+direction errors on the same geometry, so use the orange rings as well as the route overlays. These are observed label changes; the figures do not
+establish the physical cause of each error.
 
-![Trip 78 overview: fixed-transition regression](../results/maps/hmm_mock_20261118_v3_00000078_comparison_overview.png)
+[Interactive comparison](../results/maps/hmm_model_20261118_v1_00000078_comparison.html)
 
-![Trip 78 detail: points 2567-2607](../results/maps/hmm_mock_20261118_v3_00000078_comparison_detail.png)
+![Trip 78 overview](../results/maps/hmm_model_20261118_v1_00000078_comparison_overview.png)
 
-Detail caption: this window maximises points where the classifier is correct and
-fixed decoding is wrong. Some mistakes concern direction on the same geometry,
-so use the orange rings as well as the route overlays. The metrics in the panel
-headings are whole-trip values, not values for this selected window.
+![Trip 78 detail, points 2532-2572](../results/maps/hmm_model_20261118_v1_00000078_comparison_detail.png)
 
-## Reproduce and update
+## Other maps
+- `results/figures/folium_map_*.png`: EDA maps of three trips (GPS, road network, reference route) with an online basemap.
+- `results/maps/map_*.html`: the interactive versions of those maps.
 
-From the repository root:
+## Reproduce
 
-```powershell
-python -m pip install -r requirements-figures.txt
-python src/make_hmm_figures.py --data-root "../Student folder" --tag NEW_UNIQUE_TAG --screenshots --browser "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+```
+python src/make_hmm_figures.py --data-root data --tag NEW_UNIQUE_TAG --prob model --improve-trip 00000004 --regress-trip 00000078
 ```
 
-The tag must be new: the script refuses any existing matching output. HTML,
-predictions, screenshots and a metric/config/hash manifest are written under
-`results/maps/`. HTML uses the repo's local Leaflet assets and no external tiles,
-CDNs or geocoding. Keep the repo-relative folder structure when opening it.
-Screenshots run in a headless offline browser with HTTP and HTTPS blocked.
-The grey background is intentional; the displayed roads come from the supplied
-trip network. Browser rendering checks layer controls and raises on JS errors.
-
-`src/viz.py::make_trip_map` retains its original online default for existing callers;
-this report generator explicitly selects offline mode. The new `point_errors`
-argument is optional and is for reference-backed report visualization only.
-
-When the model arrives, the data-pipeline owner retunes both decoders. Then adapt
-this generator to load the model's positive-class probabilities with exactly the
-training feature order and any scaler. Use both new configs, a fresh output tag,
-and update the captions and section 5 from that run. Do not relabel these mock
-maps as trained-model results. AI assistance was used for the generator and notes.
-
+The tag must be new (the script refuses to overwrite existing output). It writes HTML, predictions and a manifest with metrics, configs and file hashes
+under `results/maps/`. Screenshots can be added with `--screenshots` (needs Playwright) or by opening the comparison page with `?view=overview` or `?view=detail`
+in a browser. The script now also runs on Python 3.10. AI assistance was used for the generator and these notes.

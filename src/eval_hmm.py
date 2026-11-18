@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import numpy as np, pandas as pd
 from data_loader import load_trip
 from features import FEATURE_COLS
-from evaluate import pointwise_accuracy, route_continuity
+from evaluate import pointwise_accuracy, route_continuity, sequence_exact_rate
 import hmm, hmm_fixed
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
@@ -123,7 +123,8 @@ def eval_trip(d, cfg):
                 frac_covered=float(cov.mean()),
                 acc_clf=pointwise_accuracy(d["clf"], true, cov), acc_hmm=pointwise_accuracy(h, true, cov),
                 cont_clf=route_continuity(d["clf"][ok_c], arcs), cont_hmm=route_continuity(h[ok_h], arcs),
-                cont_ref=route_continuity(true, arcs), hmm_runtime_s=rt)
+                cont_ref=route_continuity(true, arcs), hmm_runtime_s=rt,
+                seq50_clf=sequence_exact_rate(d["clf"], true, 50), seq50_hmm=sequence_exact_rate(h, true, 50))
 
 
 def eval_set(D, keys, cfg):
