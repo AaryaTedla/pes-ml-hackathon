@@ -1,0 +1,7 @@
+prob_source,decoder,split,trips,acc_classifier_only,acc_hmm,continuity_classifier_only,continuity_hmm,trips_better,trips_worse,hmm_seconds
+model,multi-hop (hmm.py),TUNE,22,0.8567,0.9199,0.7257,0.8889,22,0,3.2103
+model,multi-hop (hmm.py),VAL,22,0.878,0.941,0.7556,0.9218,22,0,6.3082
+model,multi-hop (hmm.py),STUDENT_TEST,10,0.8652,0.9178,0.7461,0.9062,9,1,3.4478
+model,fixed-transition (hmm_fixed.py),TUNE,22,0.8567,0.8892,0.7257,0.9785,19,2,3.3948
+model,fixed-transition (hmm_fixed.py),VAL,22,0.878,0.9142,0.7556,0.9866,20,0,4.4172
+model,fixed-transition (hmm_fixed.py),STUDENT_TEST,10,0.8652,0.8879,0.7461,0.9853,8,1,1.4736

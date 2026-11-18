@@ -1,9 +1,11 @@
 {
-  "mode": "fixed",
   "distance_scale_m": 10.0,
   "heading_weight": 3.0,
-  "gap_s": 5.0,
+  "gap_s": 30.0,
   "stay_log": 0.0,
-  "connected_log": -0.2,
-  "disconnected_log": -12.0
+  "connected_log": -1.0,
+  "disconnected_log": -8.0,
+  "mode": "fixed",
+  "tuned_on": "22 train trips (seed 0), prob=model",
+  "decoder": "fixed"
 }

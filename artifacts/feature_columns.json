@@ -1,0 +1,20 @@
+[
+  "dist_m",
+  "dist_rel",
+  "cand_rank",
+  "n_cand",
+  "proj_frac",
+  "arc_len_m",
+  "cos_head",
+  "abs_head_diff_deg",
+  "speed_mps",
+  "moving",
+  "dist_prev1",
+  "dist_next1",
+  "dist_prev2",
+  "dist_next2",
+  "dist_win_mean",
+  "from_out_deg",
+  "to_out_deg",
+  "dt_prev_s"
+]
