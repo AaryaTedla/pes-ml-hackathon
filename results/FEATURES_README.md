@@ -37,7 +37,7 @@ Extra column, not a feature: `pt_has_pos` (1 if this point's reference arc is am
 | from_out_deg, to_out_deg | number of outgoing arcs at the arc's start and end node (junction-ness) |
 | dt_prev_s | seconds since the previous GPS point (gap indicator) |
 
-Why the heading features matter: 99.7% of arcs have a reverse twin, so each road has 2 arcs
+Why the heading features matter: about 93 to 95% of arcs have a reverse twin (per-trip median), so most roads have 2 arcs
 at the same distance. The distance alone gives a coin flip (nearest-arc Top-1 is about 51%).
 The direction of travel is what separates them.
 
