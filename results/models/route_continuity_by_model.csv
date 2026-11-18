@@ -1,0 +1,6 @@
+model,trips,mean_route_continuity,min_route_continuity,mean_point_accuracy_covered
+LogReg,10,0.7383,0.6063,0.8612
+LightGBM,10,0.6821,0.4579,0.8602
+RandomForest,10,0.7449,0.6095,0.8648
+MLP,10,0.7757,0.6719,0.8667
+KNN,10,0.7624,0.6418,0.8389
