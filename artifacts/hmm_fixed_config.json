@@ -1,0 +1,9 @@
+{
+  "mode": "fixed",
+  "distance_scale_m": 10.0,
+  "heading_weight": 3.0,
+  "gap_s": 5.0,
+  "stay_log": 0.0,
+  "connected_log": -0.2,
+  "disconnected_log": -12.0
+}

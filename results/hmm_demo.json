@@ -1,0 +1,34 @@
+{
+  "trip_id": "00000001",
+  "points": 1315,
+  "config": {
+    "sigma_m": 20.0,
+    "heading_weight": 2.0,
+    "beta_m": 30.0,
+    "gap_s": 30.0,
+    "max_speed_mps": 55.0,
+    "search_slack_m": 100.0,
+    "unreachable_penalty": 30.0,
+    "radius_m": 60.0,
+    "max_candidates": 12
+  },
+  "classifier_only": {
+    "point_accuracy_on_has_positive": 0.8958174904942966,
+    "point_accuracy_all": 0.8958174904942966,
+    "adjacent_or_same_arc_fraction": 0.9155251141552512,
+    "unique_arc_jaccard": 0.8007662835249042,
+    "exact_sequence_match": false
+  },
+  "hmm": {
+    "point_accuracy_on_has_positive": 0.929277566539924,
+    "point_accuracy_all": 0.929277566539924,
+    "adjacent_or_same_arc_fraction": 0.9596651445966514,
+    "unique_arc_jaccard": 0.8886597938144329,
+    "exact_sequence_match": false
+  },
+  "evaluated_positive_points": 1315,
+  "candidate_and_baseline_seconds": 0.007912500000202272,
+  "decode_seconds": 1.3309510999997656,
+  "excluded_gap_steps": 0,
+  "note": "One train-trip smoke run; parameters untuned; reference labels are derived, not physical truth. Continuity measures direct adjacency, not full network reachability."
+}
