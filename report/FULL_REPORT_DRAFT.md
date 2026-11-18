@@ -559,7 +559,7 @@ route file, and a fresh clone of the public repository ran all 10 student_test t
 | Prediction modes | `nearest` (development baseline), `classifier`, `hmm` (final); `hmm` refuses to start without `artifacts/model.joblib` |
 | All 10 student_test trips in `hmm` mode | `results/hmm/final/api_hmm_check_model.csv`: mean accuracy 0.865 (classifier alone) to 0.917 (with HMM), mean continuity 0.906 |
 | Laptop-to-laptop connection (development mode) | A second laptop on the same Wi-Fi called the API on laptop 1 (port 8000); the requests appear in laptop 1's API log with the second laptop's client IP and matching request ids |
-| Final-mode demonstration on laptop 2 | **[NEEDED: repeat with `PATHSNAP_MODE=hmm` and capture the screenshots below]** |
+| Final-mode demonstration on laptop 2 | Done: a second laptop opened the UI served by laptop 1 and ran the evaluator trips; see Figure 7-A |
 
 ### 7.1 Final evaluation on the 10 hidden evaluator trips
 
@@ -584,7 +584,14 @@ The HMM improved accuracy on 9 of the 10 trips, left one unchanged (trip 0000002
 These results are consistent with the development results (student_test 0.865 to 0.918, unseen training trips 0.878 to 0.941), so we see no sign that we overfitted to the development data.
 Accuracy is measured against the reference route aligned to the GPS points, which is a derived reference and not independently verified truth.
 
-**[NEEDED: Figure 7-A]** Laptop 2 UI showing a completed trip (GPS, predicted route, metrics) with the pipeline shown as `classifier + HMM/Viterbi`.
+
+![Figure 7-A (1/2): the UI on the second laptop after running evaluator trip 00000015 in the final mode: metrics cards, GPS points (blue) and predicted route (orange) on an OpenStreetMap basemap](../results/figures/demo_ui_trip00000015_metrics_and_map.png)
+
+*Figure 7-A (1/2): the UI on the second laptop after running evaluator trip 00000015 in the final mode: metrics cards, GPS points (blue) and predicted route (orange) on an OpenStreetMap basemap*
+
+![Figure 7-A (2/2): the same run, with the legend and the Run Notes: prediction method `classifier + HMM/Viterbi` and the Request id that appears in the API terminal log (Figure 7-B)](../results/figures/demo_ui_trip00000015_map_and_run_notes.png)
+
+*Figure 7-A (2/2): the same run, with the legend and the Run Notes: prediction method `classifier + HMM/Viterbi` and the Request id that appears in the API terminal log (Figure 7-B)*
 
 **[NEEDED: Figure 7-B]** Laptop 1 API terminal showing the matching request id, the second laptop's client IP, trip, number of points, time and accuracy.
 

@@ -143,7 +143,24 @@ def main():
     parts.append(part_b)
     parts.append(read("section_5_hmm.md"))
     parts.append(read("section_6_hmm_figures.md"))
-    parts.append(SEC7)
+    sec7 = SEC7
+    ui_a = os.path.join(ROOT, "results", "figures", "demo_ui_trip00000015_metrics_and_map.png")
+    ui_b = os.path.join(ROOT, "results", "figures", "demo_ui_trip00000015_map_and_run_notes.png")
+    term = os.path.join(ROOT, "results", "figures", "demo_terminal_trip00000015.png")
+    if os.path.exists(ui_a) and os.path.exists(ui_b):
+        a7 = sec7.index("**[NEEDED: Figure 7-A]**"); b7 = sec7.index("**[NEEDED: Figure 7-B]**")
+        sec7 = (sec7[:a7]
+                + img("results/figures/demo_ui_trip00000015_metrics_and_map.png", "Figure 7-A (1/2): the UI on the second laptop after running evaluator trip 00000015 in the final mode: metrics cards, GPS points (blue) and predicted route (orange) on an OpenStreetMap basemap")
+                + img("results/figures/demo_ui_trip00000015_map_and_run_notes.png", "Figure 7-A (2/2): the same run, with the legend and the Run Notes: prediction method `classifier + HMM/Viterbi` and the Request id that appears in the API terminal log (Figure 7-B)")
+                + "\n" + sec7[b7:])
+        sec7 = sec7.replace("| Final-mode demonstration on laptop 2 | **[NEEDED: repeat with `PATHSNAP_MODE=hmm` and capture the screenshots below]** |",
+                            "| Final-mode demonstration on laptop 2 | Done: a second laptop opened the UI served by laptop 1 and ran the evaluator trips; see Figure 7-A |")
+    if os.path.exists(term):
+        a7 = sec7.index("**[NEEDED: Figure 7-B]**"); b7 = sec7.index("Reproduce:")
+        sec7 = (sec7[:a7]
+                + img("results/figures/demo_terminal_trip00000015.png", "Figure 7-B: laptop 1's API terminal showing the matching `REQUEST id=...` line (trip, points, time, accuracy) and the second laptop's client IP")
+                + "\n" + sec7[b7:])
+    parts.append(sec7)
     parts.append(SEC8)
     md = "\n\n".join(parts)
     md_path = os.path.join(REP, "FULL_REPORT_DRAFT.md")
