@@ -602,6 +602,35 @@ Accuracy is measured against the reference route aligned to the GPS points, whic
 
 *Figure 7-C: the UI after running each of the 10 evaluator trips in the final mode, one panel per trip (metrics cards and the map with the predicted route). Captured in a browser on laptop 1 against the API; every run reports the pipeline `classifier + HMM/Viterbi`.*
 
+### 7.2 Two-laptop evidence from the API log
+
+The API terminal on laptop 1 logs every request with a request id, the trip, the number of points, the time and the accuracy, and uvicorn adds the client address on the next line. The full session is saved verbatim in `report/evidence/api_demo_session_log.txt` (only Python library start-up warnings were removed). It shows two clients: laptop 1 itself (127.0.0.1) and the second laptop (10.30.200.251). The excerpt below shows (a) the second laptop requesting all 10 evaluator trips, each answered with `200 OK`, and (b) the last request, whose id `0b65fd13bd64` is the Request id shown in the second laptop's UI in Figure 7-A (trip 00000015).
+
+```
+15:35:10 | REQUEST id=bae228df7c87 POST /predict status=200 trip=00000015 points=6854 time=686.2ms accuracy=0.8971
+INFO:     10.30.200.251:61078 - "POST /predict HTTP/1.1" 200 OK
+15:35:11 | REQUEST id=ee87de404d42 POST /predict status=200 trip=00000017 points=1346 time=627.9ms accuracy=0.9138
+INFO:     10.30.200.251:61079 - "POST /predict HTTP/1.1" 200 OK
+15:35:11 | REQUEST id=57aca985ff82 POST /predict status=200 trip=00000023 points=458 time=144.9ms accuracy=0.9410
+INFO:     10.30.200.251:61080 - "POST /predict HTTP/1.1" 200 OK
+15:35:11 | REQUEST id=d2e2c1b3f47b POST /predict status=200 trip=00000030 points=654 time=243.0ms accuracy=0.8394
+INFO:     10.30.200.251:61081 - "POST /predict HTTP/1.1" 200 OK
+15:35:12 | REQUEST id=31b871ab8fa8 POST /predict status=200 trip=00000049 points=2642 time=445.2ms accuracy=0.9913
+INFO:     10.30.200.251:61082 - "POST /predict HTTP/1.1" 200 OK
+15:35:12 | REQUEST id=71b496928028 POST /predict status=200 trip=00000059 points=1031 time=311.6ms accuracy=0.9418
+INFO:     10.30.200.251:61083 - "POST /predict HTTP/1.1" 200 OK
+15:35:12 | REQUEST id=1d1c91305f1b POST /predict status=200 trip=00000067 points=916 time=126.4ms accuracy=0.9574
+INFO:     10.30.200.251:61084 - "POST /predict HTTP/1.1" 200 OK
+15:35:13 | REQUEST id=1e9609cddb7e POST /predict status=200 trip=00000073 points=1144 time=314.4ms accuracy=0.9738
+INFO:     10.30.200.251:61085 - "POST /predict HTTP/1.1" 200 OK
+15:35:14 | REQUEST id=967a42ef34c8 POST /predict status=200 trip=00000087 points=1399 time=593.7ms accuracy=0.9828
+INFO:     10.30.200.251:61086 - "POST /predict HTTP/1.1" 200 OK
+15:35:15 | REQUEST id=4b71b5733c5b POST /predict status=200 trip=00000094 points=3230 time=731.8ms accuracy=0.9452
+INFO:     10.30.200.251:61088 - "POST /predict HTTP/1.1" 200 OK
+15:41:12 | REQUEST id=0b65fd13bd64 POST /predict status=200 trip=00000015 points=6854 time=647.3ms accuracy=0.8971
+INFO:     10.30.200.251:53610 - "POST /predict HTTP/1.1" 200 OK
+```
+
 Reproduce: `python -m uvicorn api.main:app --host 0.0.0.0 --port 8000` with `PATHSNAP_MODE=hmm`; set `PATHSNAP_TRIPS_DIR` to the folder with the evaluation trips.
 A Windows firewall rule for TCP port 8000 and a shared network are required; `scripts/check_all_trips.py --api http://<laptop-1-ip>:8000` checks all trips from the second laptop.
 

@@ -111,6 +111,28 @@ Each member must be able to explain the code, experiments and results of their o
 """
 
 
+
+def two_laptop_excerpt():
+    """Section 7.2: verbatim lines from the saved API session log (second laptop = 10.30.200.251)."""
+    path = os.path.join(REP, "evidence", "api_demo_session_log.txt")
+    if not os.path.exists(path):
+        return ""
+    lines = [l.rstrip("\n") for l in open(path, encoding="utf-8") if not l.startswith("#")]
+    keep = []
+    for i, l in enumerate(lines):
+        m = re.match(r"^(\d\d:\d\d:\d\d) \| REQUEST id=(\w+) POST /predict status=200 trip=(\d+)", l)
+        if m and i + 1 < len(lines) and "10.30.200.251" in lines[i + 1]:
+            if m.group(1).startswith("15:35:") or m.group(2) == "0b65fd13bd64":
+                keep += [l, lines[i + 1]]
+    if not keep:
+        return ""
+    return ("\n### 7.2 Two-laptop evidence from the API log\n\n"
+            "The API terminal on laptop 1 logs every request with a request id, the trip, the number of points, the time and the accuracy, and uvicorn adds the client address on the next line. "
+            "The full session is saved verbatim in `report/evidence/api_demo_session_log.txt` (only Python library start-up warnings were removed). It shows two clients: laptop 1 itself (127.0.0.1) "
+            "and the second laptop (10.30.200.251). The excerpt below shows (a) the second laptop requesting all 10 evaluator trips, each answered with `200 OK`, and (b) the last request, whose id "
+            "`0b65fd13bd64` is the Request id shown in the second laptop's UI in Figure 7-A (trip 00000015).\n\n```\n" + "\n".join(keep) + "\n```\n")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pdf", action="store_true")
@@ -169,6 +191,7 @@ def main():
         extra += img("results/figures/demo_ui_all_10_trips.png",
                      "Figure 7-C: the UI after running each of the 10 evaluator trips in the final mode, one panel per trip (metrics cards and the map with the predicted route). "
                      "Captured in a browser on laptop 1 against the API; every run reports the pipeline `classifier + HMM/Viterbi`.")
+    extra += two_laptop_excerpt()
     if extra:
         a7 = sec7.index("**[NEEDED: Figure 7-B]**"); b7 = sec7.index("Reproduce:")
         sec7 = sec7[:a7] + extra + "\n" + sec7[b7:]

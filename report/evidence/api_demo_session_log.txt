@@ -1,0 +1,153 @@
+# Verbatim copy of laptop 1's API terminal during the demo session (final mode, evaluator trips).
+# Command: PATHSNAP_MODE=hmm, PATHSNAP_TRIPS_DIR=<evaluator_test folder>, scripts\run_api.bat
+# Only the Python library warnings printed at start-up were removed (they contain a local user path). Nothing else was edited.
+# Client 127.0.0.1 = laptop 1 itself. Client 10.30.200.251 = the second laptop (UI user).
+INFO:     Started server process [42932]
+INFO:     Waiting for application startup.
+15:22:54 | READY mode=classifier + HMM/Viterbi trips=10 data=D:\BTECH FILES\ML_Hackathon\evaluator_test
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+15:23:26 | REQUEST id=fe6eca180c1c GET /health status=200 trip=- points=- time=9.9ms accuracy=n/a
+INFO:     127.0.0.1:60078 - "GET /health HTTP/1.1" 200 OK
+15:23:26 | REQUEST id=5cf4cb7dfbdc GET /trips status=200 trip=- points=- time=18.6ms accuracy=n/a
+INFO:     127.0.0.1:60079 - "GET /trips HTTP/1.1" 200 OK
+15:23:26 | REQUEST id=e83339047c21 POST /predict status=200 trip=00000015 points=6854 time=672.6ms accuracy=0.8971
+INFO:     127.0.0.1:60080 - "POST /predict HTTP/1.1" 200 OK
+15:23:27 | REQUEST id=5301468e04dc POST /predict status=200 trip=00000017 points=1346 time=645.5ms accuracy=0.9138
+INFO:     127.0.0.1:60081 - "POST /predict HTTP/1.1" 200 OK
+15:23:27 | REQUEST id=ad8b7b7af8c4 POST /predict status=200 trip=00000023 points=458 time=115.3ms accuracy=0.9410
+INFO:     127.0.0.1:60082 - "POST /predict HTTP/1.1" 200 OK
+15:23:27 | REQUEST id=c66b42c8053f POST /predict status=200 trip=00000030 points=654 time=283.5ms accuracy=0.8394
+INFO:     127.0.0.1:60083 - "POST /predict HTTP/1.1" 200 OK
+15:23:28 | REQUEST id=35318a456dc1 POST /predict status=200 trip=00000049 points=2642 time=406.5ms accuracy=0.9913
+INFO:     127.0.0.1:60085 - "POST /predict HTTP/1.1" 200 OK
+15:23:28 | REQUEST id=5bbc7f3eb655 POST /predict status=200 trip=00000059 points=1031 time=342.0ms accuracy=0.9418
+INFO:     127.0.0.1:60086 - "POST /predict HTTP/1.1" 200 OK
+15:23:28 | REQUEST id=bcb8a2acbc2c POST /predict status=200 trip=00000067 points=916 time=112.6ms accuracy=0.9574
+INFO:     127.0.0.1:60087 - "POST /predict HTTP/1.1" 200 OK
+15:23:29 | REQUEST id=315f9836f6ef POST /predict status=200 trip=00000073 points=1144 time=272.4ms accuracy=0.9738
+INFO:     127.0.0.1:60088 - "POST /predict HTTP/1.1" 200 OK
+15:23:29 | REQUEST id=0ce7bf887493 POST /predict status=200 trip=00000087 points=1399 time=541.6ms accuracy=0.9828
+INFO:     127.0.0.1:60089 - "POST /predict HTTP/1.1" 200 OK
+15:23:30 | REQUEST id=d1bcb4e15267 POST /predict status=200 trip=00000094 points=3230 time=624.5ms accuracy=0.9452
+INFO:     127.0.0.1:60090 - "POST /predict HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51830 - "GET /ui/ HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51830 - "GET /ui/vendor/fonts/dm-sans.ttf HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60355 - "GET /ui/vendor/fonts/manrope.ttf HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:64939 - "GET /ui/vendor/leaflet/leaflet.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:61112 - "GET /ui/styles.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:61112 - "GET /ui/vendor/leaflet/leaflet.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:64939 - "GET /ui/app.js HTTP/1.1" 304 Not Modified
+15:31:01 | REQUEST id=696aa5e46c8e GET /health status=200 trip=- points=- time=26.2ms accuracy=n/a
+INFO:     127.0.0.1:64939 - "GET /health HTTP/1.1" 200 OK
+15:31:01 | REQUEST id=25d825f6cc1b GET /trips status=200 trip=- points=- time=58.2ms accuracy=n/a
+INFO:     127.0.0.1:64939 - "GET /trips HTTP/1.1" 200 OK
+15:33:58 | REQUEST id=4d5ae9ec6421 GET /health status=200 trip=- points=- time=29.5ms accuracy=n/a
+INFO:     10.30.200.251:56590 - "GET /health HTTP/1.1" 200 OK
+15:34:37 | REQUEST id=b316cafe0648 GET /trips status=200 trip=- points=- time=28.2ms accuracy=n/a
+INFO:     10.30.200.251:56602 - "GET /trips HTTP/1.1" 200 OK
+INFO:     10.30.200.251:56603 - "GET /ui/ HTTP/1.1" 200 OK
+INFO:     10.30.200.251:56604 - "GET /ui/vendor/fonts/dm-sans.ttf HTTP/1.1" 200 OK
+INFO:     10.30.200.251:56605 - "GET /ui/vendor/fonts/manrope.ttf HTTP/1.1" 200 OK
+INFO:     10.30.200.251:56606 - "GET /ui/vendor/leaflet/leaflet.css HTTP/1.1" 200 OK
+INFO:     10.30.200.251:56607 - "GET /ui/styles.css HTTP/1.1" 200 OK
+INFO:     10.30.200.251:56608 - "GET /ui/vendor/leaflet/leaflet.js HTTP/1.1" 200 OK
+INFO:     10.30.200.251:56609 - "GET /ui/app.js HTTP/1.1" 200 OK
+15:35:09 | REQUEST id=ae4d988d7c48 GET /trips status=200 trip=- points=- time=26.7ms accuracy=n/a
+INFO:     10.30.200.251:61077 - "GET /trips HTTP/1.1" 200 OK
+15:35:10 | REQUEST id=bae228df7c87 POST /predict status=200 trip=00000015 points=6854 time=686.2ms accuracy=0.8971
+INFO:     10.30.200.251:61078 - "POST /predict HTTP/1.1" 200 OK
+15:35:11 | REQUEST id=ee87de404d42 POST /predict status=200 trip=00000017 points=1346 time=627.9ms accuracy=0.9138
+INFO:     10.30.200.251:61079 - "POST /predict HTTP/1.1" 200 OK
+15:35:11 | REQUEST id=57aca985ff82 POST /predict status=200 trip=00000023 points=458 time=144.9ms accuracy=0.9410
+INFO:     10.30.200.251:61080 - "POST /predict HTTP/1.1" 200 OK
+15:35:11 | REQUEST id=d2e2c1b3f47b POST /predict status=200 trip=00000030 points=654 time=243.0ms accuracy=0.8394
+INFO:     10.30.200.251:61081 - "POST /predict HTTP/1.1" 200 OK
+15:35:12 | REQUEST id=31b871ab8fa8 POST /predict status=200 trip=00000049 points=2642 time=445.2ms accuracy=0.9913
+INFO:     10.30.200.251:61082 - "POST /predict HTTP/1.1" 200 OK
+15:35:12 | REQUEST id=71b496928028 POST /predict status=200 trip=00000059 points=1031 time=311.6ms accuracy=0.9418
+INFO:     10.30.200.251:61083 - "POST /predict HTTP/1.1" 200 OK
+15:35:12 | REQUEST id=1d1c91305f1b POST /predict status=200 trip=00000067 points=916 time=126.4ms accuracy=0.9574
+INFO:     10.30.200.251:61084 - "POST /predict HTTP/1.1" 200 OK
+15:35:13 | REQUEST id=1e9609cddb7e POST /predict status=200 trip=00000073 points=1144 time=314.4ms accuracy=0.9738
+INFO:     10.30.200.251:61085 - "POST /predict HTTP/1.1" 200 OK
+15:35:14 | REQUEST id=967a42ef34c8 POST /predict status=200 trip=00000087 points=1399 time=593.7ms accuracy=0.9828
+INFO:     10.30.200.251:61086 - "POST /predict HTTP/1.1" 200 OK
+15:35:15 | REQUEST id=4b71b5733c5b POST /predict status=200 trip=00000094 points=3230 time=731.8ms accuracy=0.9452
+INFO:     10.30.200.251:61088 - "POST /predict HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53009 - "GET /ui/ HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53010 - "GET /ui/vendor/fonts/dm-sans.ttf HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53011 - "GET /ui/vendor/fonts/manrope.ttf HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53012 - "GET /ui/vendor/leaflet/leaflet.css HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53013 - "GET /ui/styles.css HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53014 - "GET /ui/vendor/leaflet/leaflet.js HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53015 - "GET /ui/app.js HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53214 - "GET /ui/ HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53214 - "GET /ui/vendor/fonts/dm-sans.ttf HTTP/1.1" 200 OK
+INFO:     10.30.200.251:52825 - "GET /ui/styles.css HTTP/1.1" 200 OK
+INFO:     10.30.200.251:58643 - "GET /ui/vendor/leaflet/leaflet.css HTTP/1.1" 200 OK
+INFO:     10.30.200.251:55842 - "GET /ui/vendor/fonts/manrope.ttf HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53214 - "GET /ui/app.js HTTP/1.1" 200 OK
+INFO:     10.30.200.251:55842 - "GET /ui/vendor/leaflet/leaflet.js HTTP/1.1" 200 OK
+15:37:26 | REQUEST id=88d0ec8fd88b GET /health status=200 trip=- points=- time=16.0ms accuracy=n/a
+INFO:     10.30.200.251:55842 - "GET /health HTTP/1.1" 200 OK
+15:37:26 | REQUEST id=8b40893a4792 GET /trips status=200 trip=- points=- time=15.5ms accuracy=n/a
+INFO:     10.30.200.251:55842 - "GET /trips HTTP/1.1" 200 OK
+15:37:35 | REQUEST id=f8dab3e967a6 POST /predict status=200 trip=00000015 points=6854 time=632.3ms accuracy=0.8971
+INFO:     10.30.200.251:57490 - "POST /predict HTTP/1.1" 200 OK
+INFO:     10.30.200.251:50644 - "GET /ui/ HTTP/1.1" 200 OK
+INFO:     10.30.200.251:50644 - "GET /ui/vendor/fonts/dm-sans.ttf HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53967 - "GET /ui/vendor/fonts/manrope.ttf HTTP/1.1" 200 OK
+INFO:     10.30.200.251:61720 - "GET /ui/styles.css HTTP/1.1" 200 OK
+INFO:     10.30.200.251:64617 - "GET /ui/vendor/leaflet/leaflet.css HTTP/1.1" 200 OK
+INFO:     10.30.200.251:50644 - "GET /ui/vendor/leaflet/leaflet.js HTTP/1.1" 200 OK
+INFO:     10.30.200.251:53967 - "GET /ui/app.js HTTP/1.1" 200 OK
+15:41:04 | REQUEST id=2cd4103a5080 GET /health status=200 trip=- points=- time=14.6ms accuracy=n/a
+INFO:     10.30.200.251:50644 - "GET /health HTTP/1.1" 200 OK
+15:41:04 | REQUEST id=371a0b03967f GET /trips status=200 trip=- points=- time=26.6ms accuracy=n/a
+INFO:     10.30.200.251:50644 - "GET /trips HTTP/1.1" 200 OK
+15:41:12 | REQUEST id=0b65fd13bd64 POST /predict status=200 trip=00000015 points=6854 time=647.3ms accuracy=0.8971
+INFO:     10.30.200.251:53610 - "POST /predict HTTP/1.1" 200 OK
+15:42:48 | REQUEST id=e2d4777bd027 POST /predict status=404 trip=00000000 points=- time=5.9ms accuracy=n/a
+INFO:     127.0.0.1:52328 - "POST /predict HTTP/1.1" 404 Not Found
+15:42:50 | REQUEST id=2186d9a9f7fc POST /predict status=404 trip=00000000 points=- time=5.5ms accuracy=n/a
+INFO:     127.0.0.1:52328 - "POST /predict HTTP/1.1" 404 Not Found
+15:42:55 | REQUEST id=b5f67dbb2241 POST /predict status=200 trip=00000015 points=6854 time=1940.0ms accuracy=0.8971
+INFO:     127.0.0.1:52328 - "POST /predict HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65531 - "GET /ui/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65531 - "GET /ui/vendor/fonts/dm-sans.ttf HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57357 - "GET /ui/vendor/fonts/manrope.ttf HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50188 - "GET /ui/vendor/leaflet/leaflet.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60236 - "GET /ui/styles.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60236 - "GET /ui/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57357 - "GET /ui/vendor/leaflet/leaflet.js HTTP/1.1" 200 OK
+15:43:01 | REQUEST id=777893b24b74 GET /health status=200 trip=- points=- time=50.9ms accuracy=n/a
+INFO:     127.0.0.1:57357 - "GET /health HTTP/1.1" 200 OK
+15:43:01 | REQUEST id=4aff894a9f22 GET /trips status=200 trip=- points=- time=33.5ms accuracy=n/a
+INFO:     127.0.0.1:57357 - "GET /trips HTTP/1.1" 200 OK
+15:43:07 | REQUEST id=fa0f95909aa4 POST /predict status=200 trip=00000015 points=6854 time=1736.7ms accuracy=0.8971
+INFO:     127.0.0.1:57357 - "POST /predict HTTP/1.1" 200 OK
+15:45:21 | REQUEST id=45fcf6ec66ec POST /predict status=200 trip=00000059 points=1031 time=369.9ms accuracy=0.9418
+INFO:     10.30.200.251:63614 - "POST /predict HTTP/1.1" 200 OK
+15:45:30 | REQUEST id=4c7c2574e413 POST /predict status=200 trip=00000030 points=654 time=264.8ms accuracy=0.8394
+INFO:     10.30.200.251:54046 - "POST /predict HTTP/1.1" 200 OK
+15:45:39 | REQUEST id=93b085208a09 POST /predict status=200 trip=00000023 points=458 time=149.4ms accuracy=0.9410
+INFO:     10.30.200.251:49402 - "POST /predict HTTP/1.1" 200 OK
+15:45:40 | REQUEST id=7768f9ececd3 GET /health status=200 trip=- points=- time=17.5ms accuracy=n/a
+INFO:     10.30.200.251:56188 - "GET /health HTTP/1.1" 200 OK
+15:45:48 | REQUEST id=a81fdc84984a POST /predict status=200 trip=00000030 points=654 time=293.4ms accuracy=0.8394
+INFO:     10.30.200.251:56187 - "POST /predict HTTP/1.1" 200 OK
+15:49:16 | REQUEST id=290a76b630cb POST /predict status=200 trip=00000015 points=6854 time=895.9ms accuracy=0.8971
+INFO:     10.30.200.251:51795 - "POST /predict HTTP/1.1" 200 OK
+INFO:     10.30.200.251:56048 - "GET /ui/ HTTP/1.1" 304 Not Modified
+INFO:     10.30.200.251:56048 - "GET /ui/app.js HTTP/1.1" 304 Not Modified
+15:50:11 | REQUEST id=999d6ffe6989 GET /health status=200 trip=- points=- time=14.0ms accuracy=n/a
+INFO:     10.30.200.251:56048 - "GET /health HTTP/1.1" 200 OK
+15:50:11 | REQUEST id=92697ccb95cb GET /trips status=200 trip=- points=- time=29.9ms accuracy=n/a
+INFO:     10.30.200.251:56048 - "GET /trips HTTP/1.1" 200 OK
+15:50:27 | REQUEST id=bffa863a01ce POST /predict status=200 trip=00000094 points=3230 time=807.6ms accuracy=0.9452
+INFO:     10.30.200.251:55821 - "POST /predict HTTP/1.1" 200 OK
+15:53:47 | REQUEST id=7705653f8668 POST /predict status=200 trip=00000015 points=6854 time=678.4ms accuracy=0.8971
+INFO:     10.30.200.251:64240 - "POST /predict HTTP/1.1" 200 OK
+15:54:07 | REQUEST id=d80c818c91de POST /predict status=200 trip=00000015 points=6854 time=1693.5ms accuracy=0.8971
+INFO:     127.0.0.1:50533 - "POST /predict HTTP/1.1" 200 OK
