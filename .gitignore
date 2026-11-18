@@ -3,3 +3,8 @@ __pycache__/
 *.pyc
 .venv/
 results/features_train.parquet
+.local/
+.pytest_cache/
+.env
+results/track_d/
+node_modules/

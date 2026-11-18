@@ -1,0 +1,13 @@
+# Track D serving + existing Track A feature pipeline. Python 3.11+.
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+pydantic>=2.9,<3
+numpy>=2.0,<3
+pandas>=2.2,<4
+shapely>=2.0,<3
+pyproj>=3.6,<4
+folium>=0.18,<2
+joblib>=1.4,<2
+scikit-learn>=1.5,<2
+pyarrow>=17,<27
+# Pin model/preprocessing libraries to Track B's export environment before integration.
