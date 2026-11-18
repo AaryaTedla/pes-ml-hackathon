@@ -1,0 +1,69 @@
+{
+  "source_repo": "https://github.com/AaryaTedla/pes-ml-hackathon",
+  "source_commit": "eb47e9dd329febb4ae6691ce3d58806d9f6436d9",
+  "train_provenance": "Original features_train.parquet is gitignored and absent from clone. Rebuilt from local raw data using unchanged repository source. Same row count and reference arc IDs; candidate coverage differs for 210/208417 training points. Rebuilt no-positive count 22212 vs original 22362. points_train.parquet matches rebuilt features; original_points_train.parquet preserves repository table. Use generated coverage metrics rather than copying README statistics for this rebuild.",
+  "validation": {
+    "train": {
+      "rows": 2118916,
+      "trips": 80,
+      "points": 208417,
+      "no_positive": 22212,
+      "eligible_rows": 2057064,
+      "feature_order": [
+        "dist_m",
+        "dist_rel",
+        "cand_rank",
+        "n_cand",
+        "proj_frac",
+        "arc_len_m",
+        "cos_head",
+        "abs_head_diff_deg",
+        "speed_mps",
+        "moving",
+        "dist_prev1",
+        "dist_next1",
+        "dist_prev2",
+        "dist_next2",
+        "dist_win_mean",
+        "from_out_deg",
+        "to_out_deg",
+        "dt_prev_s"
+      ]
+    },
+    "student_test": {
+      "rows": 244176,
+      "trips": 10,
+      "points": 19160,
+      "no_positive": 25,
+      "eligible_rows": 244108,
+      "feature_order": [
+        "dist_m",
+        "dist_rel",
+        "cand_rank",
+        "n_cand",
+        "proj_frac",
+        "arc_len_m",
+        "cos_head",
+        "abs_head_diff_deg",
+        "speed_mps",
+        "moving",
+        "dist_prev1",
+        "dist_next1",
+        "dist_prev2",
+        "dist_next2",
+        "dist_win_mean",
+        "from_out_deg",
+        "to_out_deg",
+        "dt_prev_s"
+      ]
+    }
+  },
+  "sha256": {
+    "points_student_test.parquet": "d1946495f5eed0829375cfba8ebcfcd45146803075b1545505d0ce40d813b10c",
+    "original_points_train.parquet": "46d09fcec55668ce7bbed232d9f214ac45005a2ae2289b199471048aaf64050d",
+    "FEATURES_README.md": "f2f4dd3b75c13a0f0011d190df3fb9d963852346dcdf05ec2e44b26fa86f9d64",
+    "points_train.parquet": "af4436862e94807a61acfc1c9e97b42a55413143ac02d35299847dd8ffa0a01e",
+    "features_train.parquet": "cdb56c551a652ebb518e84e077d376cb8496427fbdd77c3981dc8bd71dcac439",
+    "features_student_test.parquet": "e34a6b69f1641215fc179ed5e22d03a6ce8816e4548b68ff3b0b61e930fe50a4"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "model": "RandomForest",
+  "seed": 42,
+  "requested_trials": 25,
+  "completed_trials": 6,
+  "timeout_seconds": 600,
+  "search_seconds": 676.6667000090001,
+  "best_params": {
+    "max_depth": 12,
+    "min_samples_leaf": 16
+  },
+  "objective": "3-fold CV candidate log loss; minimize",
+  "best_cv_log_loss": 0.08076949120278458,
+  "note": "Timeout is checked between trials; an active trial and final refits may exceed it."
+}
