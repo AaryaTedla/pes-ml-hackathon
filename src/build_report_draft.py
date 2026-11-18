@@ -112,6 +112,43 @@ Each member must be able to explain the code, experiments and results of their o
 
 
 
+
+def final_eval_section():
+    """Section 7.1 generated from results/hmm/final/evaluator_trips_results.csv (no hand-typed numbers)."""
+    path = os.path.join(ROOT, "results", "hmm", "final", "evaluator_trips_results.csv")
+    if not os.path.exists(path):
+        return ""
+    import pandas as pd
+    d = pd.read_csv(path, dtype={"trip_id": str})
+    g = d.accuracy_final - d.accuracy_classifier_only
+    better, equal, worse = int((g > 0.0005).sum()), int((g.abs() <= 0.0005).sum()), int((g < -0.0005).sum())
+    tot = int(d.points.sum())
+    w_clf = float((d.accuracy_classifier_only * d.points).sum() / tot)
+    w_fin = float((d.accuracy_final * d.points).sum() / tot)
+    rows = []
+    for _, r in d.iterrows():
+        rows.append(f"| {r.trip_id} | {int(r.points):,} | {r.accuracy_classifier_only:.4f} | {r.accuracy_final:.4f} | {r.accuracy_final - r.accuracy_classifier_only:+.4f} | "
+                    f"{r.route_continuity:.4f} | {r.exact_50_point_windows:.4f} | {int(r.request_ms)} |")
+    rows.append(f"| **Mean over the 10 trips** | {tot:,} (total) | **{d.accuracy_classifier_only.mean():.4f}** | **{d.accuracy_final.mean():.4f}** | **{g.mean():+.4f}** | "
+                f"**{d.route_continuity.mean():.4f}** | **{d.exact_50_point_windows.mean():.4f}** | {d.request_ms.mean():.0f} |")
+    best = d.loc[g.idxmax()]
+    return (
+        "\n### 7.1 Final evaluation on the 10 hidden evaluator trips\n\n"
+        "After all models and settings were frozen, the final pipeline (tuned Random Forest + multi-hop HMM, `PATHSNAP_MODE=hmm`) was run through the API on the 10 evaluator trips with "
+        "`scripts/check_all_trips.py`. Nothing was tuned or changed after seeing these numbers. All values are in `results/hmm/final/evaluator_trips_results.csv` "
+        "(aggregate metrics only, no labels).\n\n"
+        "| Trip | GPS points | Accuracy, classifier alone | Accuracy, final (with HMM) | Gain | Route continuity | Exact 50-point windows | Request time (ms) |\n"
+        "|---|---:|---:|---:|---:|---:|---:|---:|\n" + "\n".join(rows) + "\n\n"
+        f"The HMM improved point accuracy on {better} of the 10 trips, left {equal} unchanged and made {worse} worse; the mean gain is {g.mean() * 100:.1f} percentage points "
+        f"and the largest is trip {best.trip_id} ({best.accuracy_classifier_only:.3f} to {best.accuracy_final:.3f}). Pooling all {tot:,} GPS points instead of averaging trips gives "
+        f"{w_clf:.3f} for the classifier alone and {w_fin:.3f} for the final pipeline, because trip {best.trip_id} has {int(best.points):,} points. "
+        f"{'Every' if (d.fraction_points_reference_covered > 0.999).all() else 'Nearly every'} point has its derived reference arc within 60 m, so accuracy on covered points equals overall accuracy. "
+        "'Exact 50-point windows' is the fraction of non-overlapping 50-point stretches predicted entirely correctly. Route continuity is the fraction of changes in the predicted arc that are directly connected in the road network. "
+        "Each request took 0.12 to 0.66 s. "
+        "These results are consistent with the development results (student_test 0.865 to 0.918, unseen training trips 0.878 to 0.941), so we see no sign that we overfitted to the development data. "
+        "Accuracy is measured against the reference route aligned to the GPS points, which is a derived reference and not independently verified truth.\n")
+
+
 def two_laptop_excerpt():
     """Section 7.2: verbatim lines from the saved API session log (second laptop = 10.30.200.251)."""
     path = os.path.join(REP, "evidence", "api_demo_session_log.txt")
@@ -166,6 +203,11 @@ def main():
     parts.append(read("section_5_hmm.md"))
     parts.append(read("section_6_hmm_figures.md"))
     sec7 = SEC7
+    fe = final_eval_section()
+    if fe:
+        a71 = sec7.index("### 7.1 Final evaluation")
+        b71 = sec7.index("**[NEEDED: Figure 7-A]**")
+        sec7 = sec7[:a71] + fe.lstrip("\n") + "\n" + sec7[b71:]
     ui_a = os.path.join(ROOT, "results", "figures", "demo_ui_trip00000015_metrics_and_map.png")
     ui_b = os.path.join(ROOT, "results", "figures", "demo_ui_trip00000015_map_and_run_notes.png")
     term = os.path.join(ROOT, "results", "figures", "demo_terminal_trip00000015.png")

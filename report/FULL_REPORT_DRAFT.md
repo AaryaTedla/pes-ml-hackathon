@@ -563,26 +563,23 @@ route file, and a fresh clone of the public repository ran all 10 student_test t
 
 ### 7.1 Final evaluation on the 10 hidden evaluator trips
 
-After all models and settings were frozen, the final pipeline (tuned Random Forest + multi-hop HMM, `PATHSNAP_MODE=hmm`) was run once through the live API on the 10 evaluator
-trips with `scripts/check_all_trips.py`. Nothing was tuned or changed after seeing these numbers. Values are rounded to three decimals as printed by the script.
+After all models and settings were frozen, the final pipeline (tuned Random Forest + multi-hop HMM, `PATHSNAP_MODE=hmm`) was run through the API on the 10 evaluator trips with `scripts/check_all_trips.py`. Nothing was tuned or changed after seeing these numbers. All values are in `results/hmm/final/evaluator_trips_results.csv` (aggregate metrics only, no labels).
 
-| Trip | GPS points | Accuracy, classifier alone | Accuracy, final (with HMM) | Route continuity |
-|---|---:|---:|---:|---:|
-| 00000015 | 6,854 | 0.671 | 0.897 | 0.837 |
-| 00000017 | 1,346 | 0.882 | 0.914 | 0.742 |
-| 00000023 | 458 | 0.941 | 0.941 | 0.887 |
-| 00000030 | 654 | 0.775 | 0.839 | 0.810 |
-| 00000049 | 2,642 | 0.981 | 0.991 | 0.954 |
-| 00000059 | 1,031 | 0.919 | 0.942 | 0.813 |
-| 00000067 | 916 | 0.938 | 0.957 | 0.962 |
-| 00000073 | 1,144 | 0.958 | 0.974 | 0.961 |
-| 00000087 | 1,399 | 0.940 | 0.983 | 0.968 |
-| 00000094 | 3,230 | 0.907 | 0.945 | 0.920 |
-| **Mean over the 10 trips** | | **0.891** | **0.938** | **0.885** |
+| Trip | GPS points | Accuracy, classifier alone | Accuracy, final (with HMM) | Gain | Route continuity | Exact 50-point windows | Request time (ms) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 00000015 | 6,854 | 0.6710 | 0.8971 | +0.2261 | 0.8366 | 0.5693 | 657 |
+| 00000017 | 1,346 | 0.8819 | 0.9138 | +0.0319 | 0.7422 | 0.2692 | 637 |
+| 00000023 | 458 | 0.9410 | 0.9410 | +0.0000 | 0.8868 | 0.8889 | 122 |
+| 00000030 | 654 | 0.7752 | 0.8394 | +0.0642 | 0.8097 | 0.1538 | 298 |
+| 00000049 | 2,642 | 0.9807 | 0.9913 | +0.0106 | 0.9536 | 0.8077 | 464 |
+| 00000059 | 1,031 | 0.9195 | 0.9418 | +0.0223 | 0.8134 | 0.1500 | 337 |
+| 00000067 | 916 | 0.9378 | 0.9574 | +0.0197 | 0.9615 | 0.5000 | 135 |
+| 00000073 | 1,144 | 0.9580 | 0.9738 | +0.0157 | 0.9605 | 0.4545 | 343 |
+| 00000087 | 1,399 | 0.9400 | 0.9828 | +0.0429 | 0.9678 | 0.6667 | 599 |
+| 00000094 | 3,230 | 0.9071 | 0.9452 | +0.0381 | 0.9199 | 0.3750 | 652 |
+| **Mean over the 10 trips** | 19,674 (total) | **0.8912** | **0.9384** | **+0.0472** | **0.8852** | **0.4835** | 424 |
 
-The HMM improved accuracy on 9 of the 10 trips, left one unchanged (trip 00000023) and made none worse. The largest gain is trip 00000015 (0.671 to 0.897). Each request took 0.14 to 0.70 s.
-These results are consistent with the development results (student_test 0.865 to 0.918, unseen training trips 0.878 to 0.941), so we see no sign that we overfitted to the development data.
-Accuracy is measured against the reference route aligned to the GPS points, which is a derived reference and not independently verified truth.
+The HMM improved point accuracy on 9 of the 10 trips, left 1 unchanged and made 0 worse; the mean gain is 4.7 percentage points and the largest is trip 00000015 (0.671 to 0.897). Pooling all 19,674 GPS points instead of averaging trips gives 0.837 for the classifier alone and 0.934 for the final pipeline, because trip 00000015 has 6,854 points. Every point has its derived reference arc within 60 m, so accuracy on covered points equals overall accuracy. 'Exact 50-point windows' is the fraction of non-overlapping 50-point stretches predicted entirely correctly. Route continuity is the fraction of changes in the predicted arc that are directly connected in the road network. Each request took 0.12 to 0.66 s. These results are consistent with the development results (student_test 0.865 to 0.918, unseen training trips 0.878 to 0.941), so we see no sign that we overfitted to the development data. Accuracy is measured against the reference route aligned to the GPS points, which is a derived reference and not independently verified truth.
 
 
 ![Figure 7-A (1/2): the UI on the second laptop after running evaluator trip 00000015 in the final mode: metrics cards, GPS points (blue) and predicted route (orange) on an OpenStreetMap basemap](../results/figures/demo_ui_trip00000015_metrics_and_map.png)

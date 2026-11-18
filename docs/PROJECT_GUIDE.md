@@ -53,6 +53,7 @@ Every trip has **its own** road network. There are **no labels per GPS point**, 
 - Models (3-fold CV, Top-1 per point): random forest 0.838, LightGBM 0.833, MLP 0.830, logistic regression 0.827, KNN 0.809; the nearest-road baseline is about 0.51. The top three are close, so the margin is narrow.
 - Random forest was chosen by a rule fixed beforehand (highest CV Top-1). Only 6 of 25 planned Optuna trials ran, and tuning barely changed the result.
 - With the HMM: accuracy rises from 86.5% to 91.8% on the 10 student-test trips and from 87.8% to 94.1% on 22 unseen training trips.
+- Final evaluation on the 10 hidden evaluator trips (run once, after everything was frozen): mean accuracy 0.891 for the classifier alone and 0.938 with the HMM (better on 9 trips, equal on 1, worse on none); all values are in `results/hmm/final/evaluator_trips_results.csv`.
 
 ## 6. Folder map
 

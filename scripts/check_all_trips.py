@@ -29,8 +29,14 @@ def main():
             r.raise_for_status()
             j = r.json(); m = j.get("metrics") or {}
             f = lambda k: f"{m[k]:.3f}" if m.get(k) is not None else "n/a"
-            rows.append(dict(trip_id=t, points=j["n_points"], pipeline=j["pipeline"], accuracy_classifier_only=m.get("pointwise_accuracy_classifier_only"),
-                             accuracy_final=m.get("pointwise_accuracy"), route_continuity=m.get("route_continuity"),
+            rows.append(dict(trip_id=t, points=j["n_points"], pipeline=j["pipeline"],
+                             accuracy_classifier_only=m.get("pointwise_accuracy_classifier_only"),
+                             accuracy_final=m.get("pointwise_accuracy"),
+                             accuracy_final_reference_covered=m.get("pointwise_accuracy_reference_covered"),
+                             fraction_points_reference_covered=m.get("frac_points_reference_covered"),
+                             route_continuity=m.get("route_continuity"),
+                             exact_50_point_windows=m.get("sequence_window50_accuracy"),
+                             points_scored=m.get("n_points_scored"),
                              request_ms=round((time.time() - t0) * 1000), request_id=j.get("request_id")))
             print(f"{t:10s}{j['n_points']:7d}{f('pointwise_accuracy_classifier_only'):>10s}{f('pointwise_accuracy'):>11s}"
                   f"{f('route_continuity'):>11s}{(time.time()-t0)*1000:7.0f}  OK")
