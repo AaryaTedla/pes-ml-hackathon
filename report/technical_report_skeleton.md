@@ -130,6 +130,8 @@ Evidence: [decoder code, config, actual comparison CSV, selected successful and 
 
 ## 6. Geographical Visualisation Using Folium
 
+HMM comparison figures and PNGs for the PDF: [figure captions and regeneration](section_6_hmm_figures.md).
+
 Owners: 497 (generator), 548 (offline export wrapper).
 
 Use `python -m api.export_map <trip_id> --prediction <real-result.json> --include-reference --out <report-map.html>` with the final model/HMM output. See README for commands.

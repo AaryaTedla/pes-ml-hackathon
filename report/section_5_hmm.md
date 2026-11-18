@@ -163,6 +163,10 @@ masks do not affect this particular accuracy comparison.
 
 ## 5.6 Update after the classifier handoff
 
+Report figures and captions: [HMM map comparisons](section_6_hmm_figures.md).
+They show the improvement on training trip 00000010 and the fixed-transition
+regression on 00000078, with classifier-only and both HMM variants side by side.
+
 All tables above use mock emissions. Once SRN 496 supplies the selected model,
 replace the mock scores with its positive-class probabilities in both decoders.
 Retune both variants on the same whole-trip tuning set, then score the separate
