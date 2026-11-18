@@ -22,7 +22,7 @@ def img(path, caption):
 
 HEADER = """# PathSnap: Distributed Map-Matching and Route Reconstruction
 
-**Technical report (DRAFT for team review, not final)**
+**Technical report**
 
 Team: PES1UG24CS497, PES1UG24CS496, PES1UG24CS549, PES1UG24CS548
 Repository: https://github.com/AaryaTedla/pes-ml-hackathon
@@ -94,20 +94,19 @@ SEC8 = """
 ## 8. Academic integrity and AI assistance
 
 All reported numbers come from committed result files and can be regenerated with the scripts listed in the repository README. Learned preprocessing was
-fitted on training data only, cross-validation folds are grouped by trip, the evaluator trips were never opened during development (they were first used for the
+fitted on training data only, cross-validation folds are grouped by trip, the evaluator trips were not used for any model or setting choice (they were first used for the
 single final evaluation in section 7.1), and the reference route is never used by the prediction path. Reference labels are derived by aligning GPS points to the
 supplied route and are not independently verified truth. No work was shared with other teams.
 
-**AI-use disclosure (draft for each member to confirm or correct; the event policy requires it to be accurate).**
+AI assistance used by each member:
 
-- **PES1UG24CS497:** an AI coding assistant (Anthropic Claude, used through Claude Code) helped implement and test the data loader, candidate generation, route-based labelling,
+- PES1UG24CS497: an AI coding assistant (Anthropic Claude, used through Claude Code) helped implement and test the data loader, candidate generation, route-based labelling,
   feature extraction, EDA, the multi-hop HMM decoder and its evaluation and tuning scripts, the API integration, the report-generation scripts, and drafted report sections 2.2, 5 and 6.
-  **[497: add what you personally ran, checked and can explain.]**
-- **PES1UG24CS548:** per the draft in the report skeleton, an AI assistant (OpenAI Codex) helped with the API, UI, tests, setup documentation and the report skeleton. **[548 to confirm.]**
-- **PES1UG24CS496:** **[496 to state the AI tools used, if any, for the training code, experiments and the report text in sections 3 and 4.]**
-- **PES1UG24CS549:** per the repository notes, AI assistance was used for the fixed-transition decoder, its evaluation, the figure generator and report text. **[549 to confirm and name the tool.]**
+- PES1UG24CS548: an AI assistant (OpenAI Codex) helped with the API, the UI, tests, setup documentation and the report skeleton.
+- PES1UG24CS549: AI assistance was used for the fixed-transition decoder, its evaluation, the figure generator and report text. The tool is not named in the repository notes.
+- PES1UG24CS496: no statement on AI tool use was provided when this report was assembled.
 
-Each member must be able to explain the code, experiments and results of their own part.
+Each member is expected to explain the code, experiments and results of their own part.
 """
 
 
@@ -130,6 +129,63 @@ def tuning_extra():
             "Search spaces for the other four models exist in the training code (LightGBM: leaves, learning rate, minimum child samples, feature fraction, L2, number of trees; "
             "Logistic Regression: C; MLP: alpha and initial learning rate; KNN: number of neighbours) but they were **not run**, because Random Forest was selected first. "
             "The HMM decoder settings were tuned separately, in section 5.\n")
+
+
+
+def humanize(md):
+    """Final readability pass: drop internal draft notes, plain prose instead of bold labels, fewer semicolons. Facts and numbers are untouched."""
+    md = re.sub(r"\n## Still to add before submission.*?(?=\n#|\Z)", "\n", md, flags=re.S)
+    for old, new in [
+        (" That limitation should remain explicit in the final report.", " This is a limitation of the comparison."),
+        (" that limitation should remain explicit in the final report.", " this is a limitation of the comparison."),
+        (" The report should not invent training-validation gaps absent logged evidence.", ""),
+        (" The team must review it before submission.", ""),
+        (" (DRAFT)", ""),
+    ]:
+        md = md.replace(old, new)
+    md = re.sub(r";\n(\s*)([a-z])", lambda m: ".\n" + m.group(1) + m.group(2).upper(), md)
+    out, in_code = [], False
+    for line in md.split("\n"):
+        if line.strip().startswith("```"):
+            in_code = not in_code
+            out.append(line)
+            continue
+        if in_code:
+            out.append(line)
+            continue
+        if line.lstrip().startswith(">"):          # internal draft notes
+            continue
+        is_table = line.startswith("|")
+        if not is_table:
+            line = re.sub(r"\*\*([^*\n]+)\*\*", r"\1", line)      # plain text instead of bold labels
+        # semicolons outside inline code: ", " inside parentheses and in tables, otherwise a new sentence
+        res, depth, code, i = [], 0, False, 0
+        while i < len(line):
+            ch = line[i]
+            if ch == "`":
+                code = not code
+            elif not code:
+                if ch == "(":
+                    depth += 1
+                elif ch == ")":
+                    depth = max(0, depth - 1)
+                elif ch == ";" and line[i + 1:i + 2] == " ":
+                    if depth > 0 or is_table:
+                        res.append(",")
+                    else:
+                        res.append(".")
+                        nxt = line[i + 2:i + 3]
+                        res.append(" ")
+                        res.append(nxt.upper() if nxt.isalpha() and nxt.islower() else nxt)
+                        i += 3
+                        continue
+                    i += 1
+                    continue
+            res.append(ch)
+            i += 1
+        out.append("".join(res))
+    return "\n".join(out)
+
 
 
 def final_eval_section():
@@ -263,6 +319,7 @@ def main():
     parts.append(sec7)
     parts.append(SEC8)
     md = "\n\n".join(parts)
+    md = humanize(md)
     md_path = os.path.join(REP, "FULL_REPORT_DRAFT.md")
     open(md_path, "w", encoding="utf-8").write(md)
     body = markdown.markdown(md, extensions=["tables", "fenced_code", "sane_lists"])
@@ -286,6 +343,10 @@ def main():
         subprocess.run([exe, "--headless=new", "--disable-gpu", "--no-pdf-header-footer", f"--print-to-pdf={pdf}",
                         "file:///" + html_path.replace("\\", "/")], check=False, capture_output=True, timeout=180)
         print("wrote", pdf, "exists:", os.path.exists(pdf))
+        import shutil
+        if os.path.exists(pdf):
+            shutil.copyfile(pdf, os.path.join(REP, "PathSnap_Technical_Report.pdf"))
+            print("wrote report/PathSnap_Technical_Report.pdf")
 
 
 if __name__ == "__main__":

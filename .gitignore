@@ -10,3 +10,4 @@ results/features_train.parquet
 results/track_d/
 node_modules/
 report/FULL_REPORT_DRAFT.html
+report/FULL_REPORT_DRAFT.pdf
