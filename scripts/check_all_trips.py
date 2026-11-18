@@ -10,6 +10,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--api", default="http://127.0.0.1:8000")
     ap.add_argument("--expect", type=int, default=10, help="expected number of trips")
+    ap.add_argument("--csv", help="also save the per-trip table (aggregate metrics only) to this CSV file")
     a = ap.parse_args()
     try:
         h = requests.get(a.api + "/health", timeout=10).json()
@@ -20,6 +21,7 @@ def main():
     print(f"API {a.api} | mode={h.get('mode')} | pipeline={h['pipeline']} | trips={len(trips)}")
     print(f"{'trip':10s}{'points':>7s}{'acc(clf)':>10s}{'acc(final)':>11s}{'continuity':>11s}{'ms':>7s}  status")
     bad = 0
+    rows = []
     for t in trips:
         t0 = time.time()
         try:
@@ -27,6 +29,9 @@ def main():
             r.raise_for_status()
             j = r.json(); m = j.get("metrics") or {}
             f = lambda k: f"{m[k]:.3f}" if m.get(k) is not None else "n/a"
+            rows.append(dict(trip_id=t, points=j["n_points"], pipeline=j["pipeline"], accuracy_classifier_only=m.get("pointwise_accuracy_classifier_only"),
+                             accuracy_final=m.get("pointwise_accuracy"), route_continuity=m.get("route_continuity"),
+                             request_ms=round((time.time() - t0) * 1000), request_id=j.get("request_id")))
             print(f"{t:10s}{j['n_points']:7d}{f('pointwise_accuracy_classifier_only'):>10s}{f('pointwise_accuracy'):>11s}"
                   f"{f('route_continuity'):>11s}{(time.time()-t0)*1000:7.0f}  OK")
         except Exception as e:
@@ -34,6 +39,11 @@ def main():
             print(f"{t:10s}{'':>7s}{'':>10s}{'':>11s}{'':>11s}{'':>7s}  FAILED: {e}")
     if len(trips) != a.expect:
         print(f"WARNING: expected {a.expect} trips, API lists {len(trips)}"); bad += 1
+    if a.csv and rows:
+        import csv
+        with open(a.csv, "w", newline="", encoding="utf-8") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+        print(f"saved {a.csv}")
     print("ALL OK" if not bad else f"{bad} PROBLEM(S)")
     return 1 if bad else 0
 
