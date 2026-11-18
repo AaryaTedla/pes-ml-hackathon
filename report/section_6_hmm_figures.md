@@ -22,11 +22,11 @@ basemap (the grey background is intentional; the roads drawn are the supplied tr
 The fixed decoder corrects 239 classifier errors and introduces 21 others. The detail window (points 291 to 331) is the 41-point stretch with
 the most points corrected by fixed decoding. It is an illustrative selected region, not a random sample.
 
-[Interactive comparison](../results/maps/hmm_model_20261118_v1_00000004_comparison.html)
+[Interactive comparison](../results/maps/hmm_compare_00000004_comparison.html)
 
-![Trip 4 overview](../results/maps/hmm_model_20261118_v1_00000004_comparison_overview.png)
+![Trip 4 overview](../results/maps/hmm_compare_00000004_comparison_overview.png)
 
-![Trip 4 detail, points 291-331](../results/maps/hmm_model_20261118_v1_00000004_comparison_detail.png)
+![Trip 4 detail, points 291-331](../results/maps/hmm_compare_00000004_comparison_detail.png)
 
 ## Fixed-transition regression: train trip 00000078 (TUNE split)
 
@@ -41,11 +41,11 @@ The detail window (points 2532 to 2572) is the stretch with the most points wher
 direction errors on the same geometry, so use the orange rings as well as the route overlays. These are observed label changes; the figures do not
 establish the physical cause of each error.
 
-[Interactive comparison](../results/maps/hmm_model_20261118_v1_00000078_comparison.html)
+[Interactive comparison](../results/maps/hmm_compare_00000078_comparison.html)
 
-![Trip 78 overview](../results/maps/hmm_model_20261118_v1_00000078_comparison_overview.png)
+![Trip 78 overview](../results/maps/hmm_compare_00000078_comparison_overview.png)
 
-![Trip 78 detail, points 2532-2572](../results/maps/hmm_model_20261118_v1_00000078_comparison_detail.png)
+![Trip 78 detail, points 2532-2572](../results/maps/hmm_compare_00000078_comparison_detail.png)
 
 ## Other maps
 - `results/figures/folium_map_*.png`: EDA maps of three trips (GPS, road network, reference route) with an online basemap.

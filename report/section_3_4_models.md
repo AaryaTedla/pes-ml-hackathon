@@ -1,7 +1,7 @@
 # Track B: model comparison and Bayesian optimisation
 
 Owner: Aarya, PES1UG24CS496. All values below come from
-`results/models/deadline_all_01/` and `results/models/tuning_deadline_02/`.
+`results/models/model_comparison/` and `results/models/rf_tuning/`.
 
 ## Experimental protocol
 

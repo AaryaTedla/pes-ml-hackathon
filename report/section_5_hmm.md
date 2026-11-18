@@ -1,7 +1,7 @@
 # 5. HMM and Viterbi Route Reconstruction
 
 > Draft built from the committed results in `results/`. The team must review it, rewrite it in its own words and be able to
-> explain every statement. All numbers below come from `results/hmm_decoder_comparison_model.csv` and its per-trip file unless noted.
+> explain every statement. All numbers below come from `results/hmm/final/hmm_decoder_comparison_model.csv` and its per-trip file unless noted.
 
 ## 5.1 States and emission scores
 
@@ -15,7 +15,7 @@ route is used only for scoring after prediction and never as decoder input.
 The emission score of a candidate is the log of the classifier's probability that it is the correct arc. The classifier is the tuned
 Random Forest (`artifacts/model.joblib`, trained on 40 training trips; see section 4). Before the trained model was available we
 used a heuristic stand-in, softmax(-dist_m/10 + 3*cos_head) per GPS point. Those earlier results are kept in
-`results/hmm_decoder_comparison_mock.csv` as a baseline and are not the final results.
+`results/hmm/stand_in/hmm_decoder_comparison_mock.csv` as a baseline and are not the final results.
 
 ## 5.2 Two transition designs
 
@@ -58,7 +58,7 @@ belong to a better complete sequence. Working with log scores avoids multiplying
 **Trips and tuning.** 54 whole trips: 22 training trips labelled TUNE, 22 labelled VAL and the 10 student_test trips (seed 0).
 Training trips with a candidate miss rate above 5%, or with more than 8,000 points, are excluded, so the comparison does not cover every
 training trip or the longest trips. **Both decoders were tuned with the same coordinate search on the TUNE trips only, using the
-trained model's probabilities.** The search logs are `results/hmm_tuning_multihop_model.csv` and `results/hmm_tuning_fixed_model.csv`.
+trained model's probabilities.** The search logs are `results/hmm/final/hmm_tuning_multihop_model.csv` and `results/hmm/final/hmm_tuning_fixed_model.csv`.
 VAL and student_test were not used to choose any setting. Evaluator trips were never used. (An earlier comparison on stand-in probabilities tuned the two
 decoders on different trips; that limitation no longer applies.)
 
@@ -94,7 +94,7 @@ every prediction matches the reference label; it uses all points, without the 60
 
 "Worse" means more than 0.5 percentage points below classifier-only.
 
-**Live API check** (`results/api_hmm_check_model.csv`): the API in `hmm` mode on all 10 student_test trips gives mean point accuracy 0.865 for the
+**Live API check** (`results/hmm/final/api_hmm_check_model.csv`): the API in `hmm` mode on all 10 student_test trips gives mean point accuracy 0.865 for the
 classifier alone and 0.917 after the multi-hop HMM, with mean continuity 0.906.
 
 **Timing.** Decoding all 22 VAL trips took 16.8 s with the multi-hop decoder and 4.7 s with the fixed decoder in the committed run, excluding feature

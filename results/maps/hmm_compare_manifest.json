@@ -1,6 +1,6 @@
 {
   "probabilities": "artifacts/model.joblib positive-class probabilities",
-  "source_commit": "da45eab87fa2b5bbf6a2b02310acf8804c831508",
+  "source_commit": "a57d6a54de133751698686f840423da96c397fe3",
   "configs": {
     "fixed": {
       "distance_scale_m": 10.0,
@@ -62,10 +62,10 @@
         }
       },
       "files": [
-        "hmm_model_20261118_v1_00000004_classifier.html",
-        "hmm_model_20261118_v1_00000004_fixed.html",
-        "hmm_model_20261118_v1_00000004_multihop.html",
-        "hmm_model_20261118_v1_00000004_comparison.html"
+        "hmm_compare_00000004_classifier.html",
+        "hmm_compare_00000004_fixed.html",
+        "hmm_compare_00000004_multihop.html",
+        "hmm_compare_00000004_comparison.html"
       ]
     },
     {
@@ -104,24 +104,24 @@
         }
       },
       "files": [
-        "hmm_model_20261118_v1_00000078_classifier.html",
-        "hmm_model_20261118_v1_00000078_fixed.html",
-        "hmm_model_20261118_v1_00000078_multihop.html",
-        "hmm_model_20261118_v1_00000078_comparison.html"
+        "hmm_compare_00000078_classifier.html",
+        "hmm_compare_00000078_fixed.html",
+        "hmm_compare_00000078_multihop.html",
+        "hmm_compare_00000078_comparison.html"
       ]
     }
   ],
   "note": "Report-only reference layers; no evaluator data. Accuracy mask: label_dist_m <= 60. Continuity: changed arcs, shared evaluate.py. Illustrative training trips (their TUNE or VAL split is stated in the report); not evaluator data.",
   "sha256": {
-    "hmm_model_20261118_v1_00000004_classifier.html": "3b35d1c35c90f99bf72106315e3283cb8311de27308bc6c1bf22ded51db4917d",
-    "hmm_model_20261118_v1_00000004_comparison.html": "2f6ff714c022918b4aa3eebc4e09b3e4770e576280a1d0a57e395e710352db9a",
-    "hmm_model_20261118_v1_00000004_fixed.html": "f5518ff23bf2fb63f0709e27ba0a77be7bc6538201a41d92eabd06c9489426d7",
-    "hmm_model_20261118_v1_00000004_multihop.html": "2a6cad5ec629e45c58dcf9d68eb7bc8ae0338a9d5e45c384e54c56a60aa64707",
-    "hmm_model_20261118_v1_00000004_predictions.csv": "1249fa91806ca6cc836f66cc21054404b867dd6b3296a63faca7c7fd32657977",
-    "hmm_model_20261118_v1_00000078_classifier.html": "d20161874282d85dcb641884b10951ad749e14d483864af2b62918a79c56457e",
-    "hmm_model_20261118_v1_00000078_comparison.html": "f4ff5ce06850b9b5340675c5bdc3a92ec81d753f4a5bb2f6dabb24a4f55c63fa",
-    "hmm_model_20261118_v1_00000078_fixed.html": "0c5c3239238a2d423a817fec38a7b28077fcb442a2c5106f8d5cc58a20bf7e0a",
-    "hmm_model_20261118_v1_00000078_multihop.html": "ab7d975109e3e4207c831c84a07c7edb956091282844b19bbed696ae84e43c7d",
-    "hmm_model_20261118_v1_00000078_predictions.csv": "3254218482e3e020aa2d2373cd9d72ae47501669d88c97d74db7c5df76bdcb6f"
+    "hmm_compare_00000004_classifier.html": "fc8b69f2038efa658379415d065b263dbf99b32809ff977c706332c649f8f56e",
+    "hmm_compare_00000004_comparison.html": "22fb9d07caf1a4e3c68644c816ed1189e902637c1f12fb11b8ff68c73449b627",
+    "hmm_compare_00000004_fixed.html": "bba995a1cea05822718008ad3134d4b6a3ded6acc11e0aad1f2de3f06f3b1bb3",
+    "hmm_compare_00000004_multihop.html": "054eca9f0ca0660cc4dc40066e57b9b796874d7c5b18596c12d2a29fee84abdf",
+    "hmm_compare_00000004_predictions.csv": "1249fa91806ca6cc836f66cc21054404b867dd6b3296a63faca7c7fd32657977",
+    "hmm_compare_00000078_classifier.html": "b00ca9586ee225817c41121c047571379e23d5cfb0e8793168c8bb8c02403998",
+    "hmm_compare_00000078_comparison.html": "dbbc1081e9beb02167e71e39fe91a1f653b33ed1d530dc600dd3c99be5231162",
+    "hmm_compare_00000078_fixed.html": "7206eeeff107691b824a30dbc6f16469ce65c547c0419ff9af36fb4b5d0ad025",
+    "hmm_compare_00000078_multihop.html": "80519b9b281e76d881e37ebaa555137db56669b09b3eb35127ea8e4f82a5cbce",
+    "hmm_compare_00000078_predictions.csv": "3254218482e3e020aa2d2373cd9d72ae47501669d88c97d74db7c5df76bdcb6f"
   }
 }

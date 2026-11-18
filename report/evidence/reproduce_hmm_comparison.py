@@ -15,7 +15,7 @@ args = parser.parse_args()
 output = Path(args.output)
 if output.exists():
     raise FileExistsError(output)
-source = pd.read_csv('results/hmm_eval_mock.csv', dtype={'trip_id':str})
+source = pd.read_csv('results/hmm/stand_in/hmm_eval_mock.csv', dtype={'trip_id':str})
 refs = {part: pd.read_parquet(f'results/points_{part}.parquet') for part in ('train','student_test')}
 cfg=json.loads(Path('artifacts/hmm_fixed_config.json').read_text())
 multi_cfg=json.loads(Path('artifacts/hmm_config.json').read_text())

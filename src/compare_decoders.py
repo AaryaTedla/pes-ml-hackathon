@@ -5,7 +5,7 @@
 
 Splits are the same seeded whole-trip TUNE / VAL splits as eval_hmm.py, plus the 10 student_test trips.
 Decoders: hmm.py (multi-hop, artifacts/hmm_config.json) and hmm_fixed.py (fixed transitions, artifacts/hmm_fixed_config.json).
-Output: results/hmm_decoder_comparison_<prob>.csv (per split) and ..._per_trip.csv. Evaluator trips are never used.
+Output: results/hmm/<final|stand_in>/hmm_decoder_comparison_<prob>.csv (per split) and ..._per_trip.csv. Evaluator trips are never used.
 """
 import os, sys, json, argparse
 sys.path.insert(0, os.path.dirname(__file__))
@@ -21,6 +21,8 @@ def main():
     ap.add_argument("--prob", default="mock", choices=["mock", "model"])
     ap.add_argument("--seed", type=int, default=0)
     a = ap.parse_args()
+    OUT = eval_hmm.out_dir(a.prob)
+    os.makedirs(OUT, exist_ok=True)
     D = eval_hmm.load_data(a.prob)
     tune, val, test = eval_hmm.make_splits(D, a.seed)
     load = lambda n: json.load(open(os.path.join(eval_hmm.ART, n)))
@@ -40,8 +42,8 @@ def main():
                              trips_worse=int((df.acc_hmm < df.acc_clf - 0.005).sum()),
                              hmm_seconds=df.hmm_runtime_s.sum()))
     out = pd.DataFrame(rows).round(4)
-    out.to_csv(os.path.join(eval_hmm.RES, f"hmm_decoder_comparison_{a.prob}.csv"), index=False)
-    pd.concat(per_trip).to_csv(os.path.join(eval_hmm.RES, f"hmm_decoder_comparison_{a.prob}_per_trip.csv"), index=False)
+    out.to_csv(os.path.join(OUT, f"hmm_decoder_comparison_{a.prob}.csv"), index=False)
+    pd.concat(per_trip).to_csv(os.path.join(OUT, f"hmm_decoder_comparison_{a.prob}_per_trip.csv"), index=False)
     print(out.to_string(index=False))
 
 

@@ -23,7 +23,7 @@ Architecture: laptop 2 browser -> FastAPI on laptop 1 -> reference-free feature 
 # 2.2 Dataset Understanding and Exploratory Data Analysis (DRAFT)
 
 > Draft from real outputs in `results/`. Every number is in `results/eda/trip_inventory.csv`,
-> `partition_counts.csv` or `results/FEATURES_README.md`, and the code is `src/eda.py`.
+> `partition_counts.csv` or `docs/features.md`, and the code is `src/eda.py`.
 > Rewrite it in your own words and check each number before it goes in the PDF.
 > Partition used is named in each paragraph, as the guide asks.
 
@@ -65,7 +65,7 @@ trips were never opened.
 - **Missing values.** There are no NaN or invalid GPS values. The missing information is in the timing (gaps) and in the reference-route coverage described above.
 
 ## Features and why we chose them
-The 18 features are listed in `results/FEATURES_README.md`. Examples from the train data, rows whose reference arc is among the candidates:
+The 18 features are listed in `docs/features.md`. Examples from the train data, rows whose reference arc is among the candidates:
 
 | Feature group | Why | Evidence |
 |---|---|---|
@@ -142,7 +142,7 @@ The nearest-arc baseline (top-1 distance choice) is only about 51% correct, whic
 
 ### 3.1 Overall model comparison
 
-Cross-validation: 3-fold GroupKFold by trip on 40 whole training trips (seed 42). Student-test: the 10 student_test trips, all 244,176 candidate rows. Top-1 is per-point (highest-probability candidate vs the derived reference arc). Macro-F1 and log loss are binary candidate metrics at threshold 0.5. Route continuity is the classifier alone (no HMM) on student_test, using the shared metric in `src/evaluate.py`; it is not an HMM result. Source: `results/models/deadline_all_01/comparison.csv` and `results/models/route_continuity_by_model.csv`.
+Cross-validation: 3-fold GroupKFold by trip on 40 whole training trips (seed 42). Student-test: the 10 student_test trips, all 244,176 candidate rows. Top-1 is per-point (highest-probability candidate vs the derived reference arc). Macro-F1 and log loss are binary candidate metrics at threshold 0.5. Route continuity is the classifier alone (no HMM) on student_test, using the shared metric in `src/evaluate.py`; it is not an HMM result. Source: `results/models/model_comparison/comparison.csv` and `results/models/route_continuity_by_model.csv`.
 
 | Model | Algorithm family | Key configuration | CV macro-F1 | Top-1 (CV / student-test) | Route continuity (student-test, classifier only) | Student-test macro-F1 | Log loss (CV / student-test) | Inference time, student-test (s) |
 |---|---|---|---:|---:|---:|---:|---:|---:|
@@ -158,7 +158,7 @@ Nearest-arc baseline Top-1: 0.5123 (CV mean), 0.5081 (student-test). Per-fold To
 # Track B: model comparison and Bayesian optimisation
 
 Owner: Aarya, PES1UG24CS496. All values below come from
-`results/models/deadline_all_01/` and `results/models/tuning_deadline_02/`.
+`results/models/model_comparison/` and `results/models/rf_tuning/`.
 
 ## Experimental protocol
 
@@ -275,31 +275,31 @@ student-test. No broad superiority or guaranteed calibration is claimed.
 
 
 
-![Figure 3.1: per-point Top-1 accuracy by model](../results/models/deadline_all_01/plots/top1.png)
+![Figure 3.1: per-point Top-1 accuracy by model](../results/models/model_comparison/plots/top1.png)
 
 *Figure 3.1: per-point Top-1 accuracy by model*
 
 
 
-![Figure 3.2: macro-F1 by model](../results/models/deadline_all_01/plots/macro_f1.png)
+![Figure 3.2: macro-F1 by model](../results/models/model_comparison/plots/macro_f1.png)
 
 *Figure 3.2: macro-F1 by model*
 
 
 
-![Figure 3.3: log loss by model](../results/models/deadline_all_01/plots/log_loss.png)
+![Figure 3.3: log loss by model](../results/models/model_comparison/plots/log_loss.png)
 
 *Figure 3.3: log loss by model*
 
 
 
-Only the MLP produces an epoch-wise training history (`results/models/deadline_all_01/MLP_loss_curve.csv`); no curves are drawn for the other models. **[NEEDED: per-model answers to the compulsory questions A, B and C of section 3.2 (suitability, hyperparameters and loss, results, over- or under-fitting evidence), written by the model owner.]**
+Only the MLP produces an epoch-wise training history (`results/models/model_comparison/MLP_loss_curve.csv`); no curves are drawn for the other models. **[NEEDED: per-model answers to the compulsory questions A, B and C of section 3.2 (suitability, hyperparameters and loss, results, over- or under-fitting evidence), written by the model owner.]**
 
 
 # 5. HMM and Viterbi Route Reconstruction
 
 > Draft built from the committed results in `results/`. The team must review it, rewrite it in its own words and be able to
-> explain every statement. All numbers below come from `results/hmm_decoder_comparison_model.csv` and its per-trip file unless noted.
+> explain every statement. All numbers below come from `results/hmm/final/hmm_decoder_comparison_model.csv` and its per-trip file unless noted.
 
 ## 5.1 States and emission scores
 
@@ -313,7 +313,7 @@ route is used only for scoring after prediction and never as decoder input.
 The emission score of a candidate is the log of the classifier's probability that it is the correct arc. The classifier is the tuned
 Random Forest (`artifacts/model.joblib`, trained on 40 training trips; see section 4). Before the trained model was available we
 used a heuristic stand-in, softmax(-dist_m/10 + 3*cos_head) per GPS point. Those earlier results are kept in
-`results/hmm_decoder_comparison_mock.csv` as a baseline and are not the final results.
+`results/hmm/stand_in/hmm_decoder_comparison_mock.csv` as a baseline and are not the final results.
 
 ## 5.2 Two transition designs
 
@@ -356,7 +356,7 @@ belong to a better complete sequence. Working with log scores avoids multiplying
 **Trips and tuning.** 54 whole trips: 22 training trips labelled TUNE, 22 labelled VAL and the 10 student_test trips (seed 0).
 Training trips with a candidate miss rate above 5%, or with more than 8,000 points, are excluded, so the comparison does not cover every
 training trip or the longest trips. **Both decoders were tuned with the same coordinate search on the TUNE trips only, using the
-trained model's probabilities.** The search logs are `results/hmm_tuning_multihop_model.csv` and `results/hmm_tuning_fixed_model.csv`.
+trained model's probabilities.** The search logs are `results/hmm/final/hmm_tuning_multihop_model.csv` and `results/hmm/final/hmm_tuning_fixed_model.csv`.
 VAL and student_test were not used to choose any setting. Evaluator trips were never used. (An earlier comparison on stand-in probabilities tuned the two
 decoders on different trips; that limitation no longer applies.)
 
@@ -392,7 +392,7 @@ every prediction matches the reference label; it uses all points, without the 60
 
 "Worse" means more than 0.5 percentage points below classifier-only.
 
-**Live API check** (`results/api_hmm_check_model.csv`): the API in `hmm` mode on all 10 student_test trips gives mean point accuracy 0.865 for the
+**Live API check** (`results/hmm/final/api_hmm_check_model.csv`): the API in `hmm` mode on all 10 student_test trips gives mean point accuracy 0.865 for the
 classifier alone and 0.917 after the multi-hop HMM, with mean continuity 0.906.
 
 **Timing.** Decoding all 22 VAL trips took 16.8 s with the multi-hop decoder and 4.7 s with the fixed decoder in the committed run, excluding feature
@@ -452,11 +452,11 @@ basemap (the grey background is intentional; the roads drawn are the supplied tr
 The fixed decoder corrects 239 classifier errors and introduces 21 others. The detail window (points 291 to 331) is the 41-point stretch with
 the most points corrected by fixed decoding. It is an illustrative selected region, not a random sample.
 
-[Interactive comparison](../results/maps/hmm_model_20261118_v1_00000004_comparison.html)
+[Interactive comparison](../results/maps/hmm_compare_00000004_comparison.html)
 
-![Trip 4 overview](../results/maps/hmm_model_20261118_v1_00000004_comparison_overview.png)
+![Trip 4 overview](../results/maps/hmm_compare_00000004_comparison_overview.png)
 
-![Trip 4 detail, points 291-331](../results/maps/hmm_model_20261118_v1_00000004_comparison_detail.png)
+![Trip 4 detail, points 291-331](../results/maps/hmm_compare_00000004_comparison_detail.png)
 
 ## Fixed-transition regression: train trip 00000078 (TUNE split)
 
@@ -471,11 +471,11 @@ The detail window (points 2532 to 2572) is the stretch with the most points wher
 direction errors on the same geometry, so use the orange rings as well as the route overlays. These are observed label changes; the figures do not
 establish the physical cause of each error.
 
-[Interactive comparison](../results/maps/hmm_model_20261118_v1_00000078_comparison.html)
+[Interactive comparison](../results/maps/hmm_compare_00000078_comparison.html)
 
-![Trip 78 overview](../results/maps/hmm_model_20261118_v1_00000078_comparison_overview.png)
+![Trip 78 overview](../results/maps/hmm_compare_00000078_comparison_overview.png)
 
-![Trip 78 detail, points 2532-2572](../results/maps/hmm_model_20261118_v1_00000078_comparison_detail.png)
+![Trip 78 detail, points 2532-2572](../results/maps/hmm_compare_00000078_comparison_detail.png)
 
 ## Other maps
 - `results/figures/folium_map_*.png`: EDA maps of three trips (GPS, road network, reference route) with an online basemap.
@@ -505,7 +505,7 @@ route file, and a fresh clone of the public repository ran all 10 student_test t
 |---|---|
 | Final commit | see `git log` of the submitted repository |
 | Prediction modes | `nearest` (development baseline), `classifier`, `hmm` (final); `hmm` refuses to start without `artifacts/model.joblib` |
-| All 10 student_test trips in `hmm` mode | `results/api_hmm_check_model.csv`: mean accuracy 0.865 (classifier alone) to 0.917 (with HMM), mean continuity 0.906 |
+| All 10 student_test trips in `hmm` mode | `results/hmm/final/api_hmm_check_model.csv`: mean accuracy 0.865 (classifier alone) to 0.917 (with HMM), mean continuity 0.906 |
 | Laptop-to-laptop connection (development mode) | A second laptop on the same Wi-Fi called the API on laptop 1 (port 8000); the requests appear in laptop 1's API log with the second laptop's client IP and matching request ids |
 | Final-mode demonstration on laptop 2 | **[NEEDED: repeat with `PATHSNAP_MODE=hmm` and capture the screenshots below]** |
 

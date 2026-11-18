@@ -62,8 +62,8 @@ fixed mode remains selected. The network variant is experimental, not an improve
 in the measured results. Its config is saved separately as hmm_network_config.json.
 Use `--mode network --tune` to reproduce that experiment.
 
-Current authoritative outputs are results/hmm_fixed_{batch,tuning}.csv,
-results/hmm_network_{batch,tuning}.csv and their *_run.json metadata files.
+Current authoritative outputs are results/hmm/stand_in/hmm_fixed_{batch,tuning}.csv,
+results/hmm/stand_in/hmm_network_{batch,tuning}.csv and their *_run.json metadata files.
 Four HMM tests pass, including network mode, missing-candidate -1 behaviour,
 nonfinite probability rejection, log-space underflow resilience, and gap resets.
 The tests are synthetic correctness checks, separate from the nine real-trip runs.

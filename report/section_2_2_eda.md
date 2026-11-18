@@ -1,7 +1,7 @@
 # 2.2 Dataset Understanding and Exploratory Data Analysis (DRAFT)
 
 > Draft from real outputs in `results/`. Every number is in `results/eda/trip_inventory.csv`,
-> `partition_counts.csv` or `results/FEATURES_README.md`, and the code is `src/eda.py`.
+> `partition_counts.csv` or `docs/features.md`, and the code is `src/eda.py`.
 > Rewrite it in your own words and check each number before it goes in the PDF.
 > Partition used is named in each paragraph, as the guide asks.
 
@@ -43,7 +43,7 @@ trips were never opened.
 - **Missing values.** There are no NaN or invalid GPS values. The missing information is in the timing (gaps) and in the reference-route coverage described above.
 
 ## Features and why we chose them
-The 18 features are listed in `results/FEATURES_README.md`. Examples from the train data, rows whose reference arc is among the candidates:
+The 18 features are listed in `docs/features.md`. Examples from the train data, rows whose reference arc is among the candidates:
 
 | Feature group | Why | Evidence |
 |---|---|---|

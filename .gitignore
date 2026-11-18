@@ -9,3 +9,4 @@ results/features_train.parquet
 .env
 results/track_d/
 node_modules/
+report/FULL_REPORT_DRAFT.html

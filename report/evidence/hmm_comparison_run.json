@@ -7,12 +7,12 @@
   "seed": "source multi-hop split seed 0; no stochastic inference",
   "timing": "fixed then multi-hop, one call per trip; no graph pre-warming; preparation excluded",
   "source_hashes": {
-    "results/hmm_eval_mock.csv": "9df357d9502e00400f865fac1f6f9999bf4c500bd3b50124557ba4b075a31325",
-    "results/hmm_fixed_batch.csv": "d69a4ab90b8f797171362b91b5c52c641988a9f40dd39b13a888fd72d9c5efbc",
+    "results/hmm/stand_in/hmm_eval_mock.csv": "9df357d9502e00400f865fac1f6f9999bf4c500bd3b50124557ba4b075a31325",
+    "results/hmm/stand_in/hmm_fixed_batch.csv": "d69a4ab90b8f797171362b91b5c52c641988a9f40dd39b13a888fd72d9c5efbc",
     "artifacts/hmm_config.json": "25cd309dddee530f56fdc37dcef0c8b58b8a96b4cdb4acc2aec2b96688289595",
     "artifacts/hmm_fixed_config.json": "1b53e2ba6168ceabfcfaed577a61a2bc2e7ff85c516f0d233d550361a65a7f51",
     "src/hmm.py": "7b30e6ce5a9de3b95c311fbb20a9f640e9ead2ca58392af656142583c9e9d0c8",
     "src/hmm_fixed.py": "0a551a6a9947bc3fe6719336a16e8614d4ce8ce14b2c871e685e9bdc95ab5e72",
-    "results/hmm_two_variant_same54_mock.csv": "99b6e8f0b1ea889b5b51d08ebd2413d43e7b81e028e8012ce7b80129f4ca8191"
+    "results/hmm/stand_in/hmm_two_variant_same54_mock.csv": "99b6e8f0b1ea889b5b51d08ebd2413d43e7b81e028e8012ce7b80129f4ca8191"
   }
 }

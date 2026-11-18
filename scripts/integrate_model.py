@@ -7,8 +7,8 @@ Steps (each stops the run if it fails):
   validate  model loads, feature order matches, predict_proba gives valid positive-class probabilities
   tune      re-tune the multi-hop decoder on the model's probabilities (TUNE trips only), save artifacts/hmm_config.json
   tunefix   same for the fixed-transition decoder, save artifacts/hmm_fixed_config.json
-  compare   classifier-only vs both decoders on TUNE / VAL / student_test -> results/hmm_decoder_comparison_model*.csv
-  api       API in `hmm` mode on all 10 student_test trips -> results/api_hmm_check_model.csv
+  compare   classifier-only vs both decoders on TUNE / VAL / student_test -> results/hmm/final/hmm_decoder_comparison_model*.csv
+  api       API in `hmm` mode on all 10 student_test trips -> results/hmm/final/api_hmm_check_model.csv
 Env overrides for tests only: PATHSNAP_ARTIFACTS, PATHSNAP_RESULTS. Evaluator trips are never used.
 """
 import os, sys, json, argparse, subprocess, time
@@ -77,7 +77,8 @@ def api_check():
     print(df.drop(columns="pipeline").round(4).to_string(index=False))
     print(f"   mean acc classifier-only {df.acc_classifier_only.mean():.4f} -> final {df.acc_final.mean():.4f} | "
           f"mean continuity {df.continuity.mean():.4f}")
-    df.to_csv(os.path.join(eval_hmm.RES, "api_hmm_check_model.csv"), index=False)
+    os.makedirs(eval_hmm.out_dir("model"), exist_ok=True)
+    df.to_csv(os.path.join(eval_hmm.out_dir("model"), "api_hmm_check_model.csv"), index=False)
 
 
 def main():

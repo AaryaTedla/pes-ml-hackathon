@@ -39,6 +39,7 @@ def main():
     if args.mode == 'network':
         cfg.update(network_cutoff_m=250., max_search_nodes=128, beta_m=30.)
     labels = pd.read_parquet(root/f'results/points_{args.partition}.parquet')
+    (root/'results/hmm/stand_in').mkdir(parents=True, exist_ok=True)
     requested = args.trips or (TUNE + CHECK if args.partition == 'train' else sorted(labels.trip_id.astype(str).str.zfill(8).unique()))
     tune_ids = set(TUNE) if args.partition == 'train' else set()
     trials = [cfg]
@@ -73,7 +74,7 @@ def main():
         # Network is opt-in until its held-out performance and latency are reviewed.
         target = 'hmm_fixed_config.json' if args.mode == 'fixed' else 'hmm_network_config.json'
         (root/'artifacts'/target).write_text(json.dumps(cfg, indent=2))
-        pd.DataFrame(trial_rows).to_csv(root/f'results/hmm_{args.mode}_tuning.csv', index=False)
+        pd.DataFrame(trial_rows).to_csv(root/f'results/hmm/stand_in/hmm_{args.mode}_tuning.csv', index=False)
     rows = []
     for tid in requested:
         trip, feats, truth = cache[tid]
@@ -88,8 +89,8 @@ def main():
                          classifier_sequence_exact_50=sequence_exact_rate(baseline, truth.true_arc.to_numpy()),
                          **measure(trip, feats, truth, cfg)))
     result = pd.DataFrame(rows)
-    result.to_csv(root/f'results/hmm_{args.mode}_batch.csv', index=False)
-    (root/f'results/hmm_{args.mode}_run.json').write_text(json.dumps(dict(config=cfg, python=platform.python_version(),
+    result.to_csv(root/f'results/hmm/stand_in/hmm_{args.mode}_batch.csv', index=False)
+    (root/f'results/hmm/stand_in/hmm_{args.mode}_run.json').write_text(json.dumps(dict(config=cfg, python=platform.python_version(),
         numpy=np.__version__, pandas=pd.__version__, partition=args.partition, tune_trips=TUNE,
         check_trips=CHECK, seed=None, note='Deterministic mock; accuracy uses has_positive; shared continuity counts changed arcs only; preparation timing includes mock probabilities.'), indent=2))
     print(result.to_string(index=False))

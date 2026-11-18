@@ -1,8 +1,10 @@
 # PathSnap
 
-A workspace for matching GPS recordings to road segments. Track D (PES1UG24CS548) provides the FastAPI service, evaluator UI, offline Folium exports, deployment scripts and report skeleton. Existing Track A files in `src/` are used without modification.
+PathSnap matches noisy GPS recordings to road segments. A classifier scores the candidate roads near each GPS point, an HMM with Viterbi decoding picks a connected route, and a FastAPI service plus a browser UI serve and display the result.
 
-**Current default: a development dummy, selecting `cand_rank == 0` for every GPS point. This is not the trained classifier or HMM.** Predictions use real trip geometry, and any displayed accuracy is computed from the supplied reference on the server after inference. Final system completion requires Tracks B/C and a successful two-laptop demonstration.
+**New here? Start with [docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md).** It explains the pipeline step by step, what every folder and file is, and how to run each part.
+
+**Prediction modes.** Without configuration the API runs in `nearest` mode, a development baseline that picks the closest road for every point (not the trained model). The trained system runs with `PATHSNAP_MODE=hmm` (classifier + HMM/Viterbi, using `artifacts/model.joblib`). Any displayed accuracy is computed from the supplied reference on the server after inference.
 
 ## Install
 
@@ -111,7 +113,7 @@ Every API request produces a terminal line with request ID, endpoint, status, tr
 
 ## Connect Tracks A, B and C
 
-The integration checklist and exact feature order are in [api/HANDOFF.md](api/HANDOFF.md). Confirm that contract with 497, 496 and 549. No teammate messages have been sent by this repository.
+The integration contract (the 18-feature order, the model interface and the decoder interface) is described in [docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md).
 
 - **Track A (497):** `prepare_trip(trip_dir)` is the only feature-building entry. It returns `(trip, candidate_features, point_features)` without a route. Keep `src/` ownership with that track.
 - **Track B (496):** place a trusted `model.joblib` (classifier or an entire sklearn Pipeline) and, only when needed, `scaler.joblib` in `artifacts/`. Supply `feature_columns.json`, training package versions and class semantics. Avoid applying a separate scaler to a Pipeline that already preprocesses. The positive class is `1`; its probability column is located using `classes_`, not assumed to be column 1.
@@ -153,20 +155,21 @@ npm --prefix tests test
 
 `api.verify` saves actual prediction JSON, `smoke_summary.csv` and run metadata under gitignored `results/track_d/`. Repeat with `--expect-mode hmm` after receiving real artifacts, and use `--api-url` from laptop 2 to exercise the network. These smoke tests verify serving, response sizes and absence of reference fields; they do not replace model evaluation or a visual browser check.
 
-The completed development checks and their limits are recorded in [report/track_d_verification.md](report/track_d_verification.md), with the actual ten-trip dummy CSV and matching API log lines under `report/evidence/`.
-
-Use [report/technical_report_skeleton.md](report/technical_report_skeleton.md) for the consolidated report. Record screenshots of the UI, offline Folium comparison and receiving API terminal. All model-result placeholders must be filled from the real experiments. AI assistance is disclosed in the skeleton; the team must review explanations and defend the implementation.
+The consolidated report draft is [report/FULL_REPORT_DRAFT.md](report/FULL_REPORT_DRAFT.md) (rebuilt by `python src/build_report_draft.py --pdf`). Record screenshots of the UI, offline Folium comparison and receiving API terminal. All model-result placeholders must be filled from the real experiments. AI assistance is disclosed in the skeleton; the team must review explanations and defend the implementation.
 
 ## Repository layout
 
 ```text
-api/        service, prediction adapter, scoring, Folium wrapper, LAN scripts, HTTP verifier
-ui/         buildless HTML/CSS/JS workspace and vendored Leaflet
-src/        existing Track A pipeline and visualisation (not changed by Track D)
-tests/      existing leakage check + Track D contract tests
-artifacts/  Track B/C handoffs when supplied
-report/     existing EDA draft + consolidated report skeleton and Track D evidence notes
-results/    existing team outputs; local Track D runs in results/track_d/
+docs/       project guide and the notes for features, training and the HMM
+src/        data pipeline, features, labels, HMM decoders, evaluation and report tools
+api/        FastAPI service, prediction adapter and server-side scoring
+ui/         browser workspace (served by the API at /ui/)
+notebooks/  Kaggle notebooks used to train and compare the models
+artifacts/  the trained model and the HMM settings the API loads
+results/    data tables, EDA, model comparison, HMM results and maps
+report/     report sections, the combined draft and the numbers sheet
+scripts/    run, check and integration helpers
+tests/      leakage, HMM, training and API/UI contract tests
 ```
 
 Commit source and reviewed result evidence with your own Git identity. Raw data, local materials, virtual environments and `.env` are ignored. The final public GitHub repository and consolidated report PDF remain team submission tasks; preparing a skeleton is not a claim that final experimental results or the PDF exist.

@@ -55,7 +55,7 @@ route file, and a fresh clone of the public repository ran all 10 student_test t
 |---|---|
 | Final commit | see `git log` of the submitted repository |
 | Prediction modes | `nearest` (development baseline), `classifier`, `hmm` (final); `hmm` refuses to start without `artifacts/model.joblib` |
-| All 10 student_test trips in `hmm` mode | `results/api_hmm_check_model.csv`: mean accuracy 0.865 (classifier alone) to 0.917 (with HMM), mean continuity 0.906 |
+| All 10 student_test trips in `hmm` mode | `results/hmm/final/api_hmm_check_model.csv`: mean accuracy 0.865 (classifier alone) to 0.917 (with HMM), mean continuity 0.906 |
 | Laptop-to-laptop connection (development mode) | A second laptop on the same Wi-Fi called the API on laptop 1 (port 8000); the requests appear in laptop 1's API log with the second laptop's client IP and matching request ids |
 | Final-mode demonstration on laptop 2 | **[NEEDED: repeat with `PATHSNAP_MODE=hmm` and capture the screenshots below]** |
 
@@ -99,8 +99,8 @@ def main():
     parts.append(read("section_3_4_models.md"))
     parts.append("\n### 3.3 Model visualisations (student-test and cross-validation results)\n")
     for f, c in [("top1", "Figure 3.1: per-point Top-1 accuracy by model"), ("macro_f1", "Figure 3.2: macro-F1 by model"), ("log_loss", "Figure 3.3: log loss by model")]:
-        parts.append(img(f"results/models/deadline_all_01/plots/{f}.png", c))
-    parts.append("\nOnly the MLP produces an epoch-wise training history (`results/models/deadline_all_01/MLP_loss_curve.csv`); no curves are drawn for the other models. "
+        parts.append(img(f"results/models/model_comparison/plots/{f}.png", c))
+    parts.append("\nOnly the MLP produces an epoch-wise training history (`results/models/model_comparison/MLP_loss_curve.csv`); no curves are drawn for the other models. "
                  "**[NEEDED: per-model answers to the compulsory questions A, B and C of section 3.2 (suitability, hyperparameters and loss, results, over- or under-fitting evidence), written by the model owner.]**\n")
     parts.append(read("section_5_hmm.md"))
     parts.append(read("section_6_hmm_figures.md"))

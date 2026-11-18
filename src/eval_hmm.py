@@ -22,6 +22,11 @@ import hmm, hmm_fixed
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 RES = os.environ.get("PATHSNAP_RESULTS", os.path.join(ROOT, "results"))
 ART = os.environ.get("PATHSNAP_ARTIFACTS", os.path.join(ROOT, "artifacts"))
+
+
+def out_dir(prob):
+    """Where decoder results are written: results/hmm/final for the trained model, results/hmm/stand_in for the heuristic."""
+    return os.path.join(RES, "hmm", "final" if prob == "model" else "stand_in")
 COVERED_M = 60.0
 MAX_PTS = 8000          # keep tuning fast: skip very long trips in the splits
 
@@ -162,7 +167,8 @@ def main():
     dec = DECODERS[a.decoder]
     decode = dec["fn"]
     GRID, DEFAULT = dec["grid"], dec["default"]
-    os.makedirs(RES, exist_ok=True); os.makedirs(ART, exist_ok=True)
+    OUT = out_dir(a.prob)
+    os.makedirs(OUT, exist_ok=True); os.makedirs(ART, exist_ok=True)
     D = load_data(a.prob)
     tune, val, test = make_splits(D, a.seed)
     tag = f"{a.decoder}_{a.prob}"
@@ -191,7 +197,7 @@ def main():
                         print(f"  round {rnd}: {p}={v} -> tune acc {s:.4f}", flush=True)
             if not improved:
                 break
-        pd.DataFrame(log).to_csv(os.path.join(RES, f"hmm_tuning_{tag}.csv"), index=False)
+        pd.DataFrame(log).to_csv(os.path.join(OUT, f"hmm_tuning_{tag}.csv"), index=False)
         print("best config:", {k: cfg[k] for k in GRID})
     rows = []
     for name, keys in (("TUNE", tune), ("VAL", val), ("STUDENT_TEST", test)):
@@ -201,7 +207,7 @@ def main():
         if a.mode == "tune":
             print(summary(eval_set(D, keys, DEFAULT), name + " (default cfg)"))
     out = pd.concat(rows)
-    out.to_csv(os.path.join(RES, f"hmm_eval_{tag}.csv"), index=False)
+    out.to_csv(os.path.join(OUT, f"hmm_eval_{tag}.csv"), index=False)
     worse = out[out.acc_hmm < out.acc_clf - 0.01][["split", "trip_id", "n_points", "max_gap_s", "acc_clf", "acc_hmm"]]
     print("trips where the HMM is worse than classifier-only by >1pt:\n", worse.to_string(index=False) if len(worse) else "none")
     if a.save_config:
