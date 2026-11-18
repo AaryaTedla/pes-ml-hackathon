@@ -184,15 +184,11 @@ function initMap() {
     attributionControl: true,
   });
   state.map.setView([20, 0], 2);
-  const tiles = L.tileLayer(
-    "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-    {
-      maxZoom: 20,
-      subdomains: "abcd",
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    },
-  ).addTo(state.map);
+  const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(state.map);
   tiles.on("tileerror", () => {
     $("tile-notice").hidden = false;
   });
@@ -254,8 +250,8 @@ function renderResult(result) {
     result.predicted_route.map((segment) =>
       L.polyline(segment, {
         color: "#c06039",
-        weight: 4,
-        opacity: 0.88,
+        weight: 5,
+        opacity: 0.92,
         lineCap: "round",
       }).bindTooltip("Predicted road segment"),
     ),
@@ -275,8 +271,9 @@ function renderResult(result) {
       ),
     ),
   );
-  if ($("show-route").checked) state.route.addTo(state.map);
+  // GPS first, route second: later canvas layers are drawn on top, so the predicted route stays visible above the dots
   if ($("show-gps").checked) state.gps.addTo(state.map);
+  if ($("show-route").checked) state.route.addTo(state.map);
   state.endpoints = L.featureGroup([
     L.marker(result.gps[0], {
       icon: L.divIcon({
