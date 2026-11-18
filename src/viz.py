@@ -48,7 +48,8 @@ def make_trip_map(trip, out_html, pred_arcs=None, title=None, radius=100.0, max_
 
     if route is not None:
         g = folium.FeatureGroup(name=f"Reference route ({len(route)} arcs)", show=True)
-        folium.PolyLine(_arc_lines(net, trip, route), color="#2ca02c", weight=5, opacity=0.85,
+        # wide, semi-transparent halo so GPS dots stay visible on top of it
+        folium.PolyLine(_arc_lines(net, trip, route), color="#2ca02c", weight=9, opacity=0.45,
                         tooltip="reference route").add_to(g)
         g.add_to(m)
 
@@ -61,8 +62,8 @@ def make_trip_map(trip, out_html, pred_arcs=None, title=None, radius=100.0, max_
     g = folium.FeatureGroup(name="GPS observations", show=True)
     step = max(1, len(tr) // max_points)
     for i in range(0, len(tr), step):
-        folium.CircleMarker([tr[i, 1], tr[i, 0]], radius=2, color="#1f77b4", fill=True, fill_opacity=0.8,
-                            weight=0, tooltip=f"pt {i}, t={tr[i, 2]:.0f}s").add_to(g)
+        folium.CircleMarker([tr[i, 1], tr[i, 0]], radius=3, color="#ffffff", fill=True, fillColor="#1f77b4",
+                            fill_opacity=0.95, weight=0.6, tooltip=f"pt {i}, t={tr[i, 2]:.0f}s").add_to(g)
     g.add_to(m)
     if point_errors is not None:
         if len(point_errors) != len(tr):

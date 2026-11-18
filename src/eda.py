@@ -165,7 +165,7 @@ def main():
     fig.tight_layout(); fig.savefig(F("06_example_trajectories.png"), dpi=130); plt.close(fig)
 
     # ------------------------------ Folium maps ------------------------------
-    for part, tid, note in [("train", "00000001", "clean trip"), ("train", "00000054", "reference route does not cover GPS track"),
+    for part, tid, note in [("train", "00000001", "clean trip"), ("train", "00000054", "reference route runs along the GPS corridor but ~140 m offset"),
                             ("student_test", "00000000", "student_test example")]:
         t = load_trip(os.path.join(ROOT, "data", part, tid))
         make_trip_map(t, os.path.join(OUT, "maps", f"map_{part}_{tid}.html"), title=f"{part} trip {tid} ({note})")

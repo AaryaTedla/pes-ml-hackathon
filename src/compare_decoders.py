@@ -23,7 +23,7 @@ def main():
     a = ap.parse_args()
     D = eval_hmm.load_data(a.prob)
     tune, val, test = eval_hmm.make_splits(D, a.seed)
-    load = lambda n: json.load(open(os.path.join(ROOT, "artifacts", n)))
+    load = lambda n: json.load(open(os.path.join(eval_hmm.ART, n)))
     decoders = (("multi-hop (hmm.py)", hmm.decode, load("hmm_config.json")),
                 ("fixed-transition (hmm_fixed.py)", hmm_fixed.decode, load("hmm_fixed_config.json")))
     rows, per_trip = [], []
@@ -39,8 +39,8 @@ def main():
                              trips_worse=int((df.acc_hmm < df.acc_clf - 0.005).sum()),
                              hmm_seconds=df.hmm_runtime_s.sum()))
     out = pd.DataFrame(rows).round(4)
-    out.to_csv(os.path.join(ROOT, "results", f"hmm_decoder_comparison_{a.prob}.csv"), index=False)
-    pd.concat(per_trip).to_csv(os.path.join(ROOT, "results", f"hmm_decoder_comparison_{a.prob}_per_trip.csv"), index=False)
+    out.to_csv(os.path.join(eval_hmm.RES, f"hmm_decoder_comparison_{a.prob}.csv"), index=False)
+    pd.concat(per_trip).to_csv(os.path.join(eval_hmm.RES, f"hmm_decoder_comparison_{a.prob}_per_trip.csv"), index=False)
     print(out.to_string(index=False))
 
 

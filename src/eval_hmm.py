@@ -1,12 +1,15 @@
 """Batch evaluation of classifier-only vs classifier+HMM over many WHOLE trips, plus decoder tuning.
 
-    python src/eval_hmm.py --mode eval            # evaluate current/default config on tune, val and student_test trips
-    python src/eval_hmm.py --mode tune            # coordinate search on the TUNE trips, report on VAL and student_test
+    python src/eval_hmm.py --mode eval                          # evaluate the saved config
+    python src/eval_hmm.py --mode tune --save-config            # coordinate search on the TUNE trips
+    python src/eval_hmm.py --decoder fixed --mode tune --save-config   # same for the fixed-transition decoder
 Options: --prob mock|model   (mock = softmax(-dist_m/10 + 3*cos_head); model = artifacts/model.joblib)
+Env overrides (tests only): PATHSNAP_ARTIFACTS, PATHSNAP_RESULTS.
 
 Protocol: train trips are split (seeded) into TUNE and VAL sets of whole trips; settings are chosen on TUNE only,
 then checked on VAL (unseen train trips) and on the 10 student_test trips. Evaluator trips are never used.
 Trips whose reference route does not cover the GPS track (candidate miss > 5%) are excluded from the splits.
+Both decoders use the SAME split, so their comparison is like for like.
 """
 import os, sys, time, json, argparse
 sys.path.insert(0, os.path.dirname(__file__))
@@ -14,20 +17,53 @@ import numpy as np, pandas as pd
 from data_loader import load_trip
 from features import FEATURE_COLS
 from evaluate import pointwise_accuracy, route_continuity
-from hmm import decode, DEFAULT_CFG
+import hmm, hmm_fixed
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
-RES, ART = os.path.join(ROOT, "results"), os.path.join(ROOT, "artifacts")
+RES = os.environ.get("PATHSNAP_RESULTS", os.path.join(ROOT, "results"))
+ART = os.environ.get("PATHSNAP_ARTIFACTS", os.path.join(ROOT, "artifacts"))
 COVERED_M = 60.0
 MAX_PTS = 8000          # keep tuning fast: skip very long trips in the splits
 
-GRID = {
-    "hop_penalty": [0.25, 0.5, 1.0, 2.0, 4.0],
-    "jump_penalty": [4.0, 8.0, 12.0, 20.0, 40.0],
-    "uturn_penalty": [1.0, 4.0, 8.0, 16.0],
-    "max_hops": [2, 3, 5],
-    "gap_s": [10.0, 30.0, 120.0],
+DECODERS = {
+    "multihop": dict(fn=hmm.decode, default=hmm.DEFAULT_CFG, cfg_file="hmm_config.json", grid={
+        "hop_penalty": [0.25, 0.5, 1.0, 2.0, 4.0],
+        "jump_penalty": [4.0, 8.0, 12.0, 20.0, 40.0],
+        "uturn_penalty": [1.0, 4.0, 8.0, 16.0],
+        "max_hops": [2, 3, 5],
+        "gap_s": [10.0, 30.0, 120.0]}),
+    "fixed": dict(fn=hmm_fixed.decode, default=hmm_fixed.DEFAULT_CONFIG, cfg_file="hmm_fixed_config.json", grid={
+        "disconnected_log": [-4.0, -8.0, -12.0, -20.0],
+        "connected_log": [-0.05, -0.2, -0.5, -1.0],
+        "gap_s": [2.0, 5.0, 10.0, 30.0]}),
 }
+decode = hmm.decode      # set in main() according to --decoder
+
+
+def load_model():
+    """Same probability contract as api/predictor.py: positive class = classes_ entry equal to 1."""
+    import joblib
+    m = joblib.load(os.path.join(ART, "model.joblib"))
+    sp = os.path.join(ART, "scaler.joblib")
+    return m, (joblib.load(sp) if os.path.exists(sp) else None)
+
+
+def model_probabilities(m, scaler, f):
+    X = f[FEATURE_COLS]
+    if scaler is not None:
+        X = scaler.transform(X if hasattr(scaler, "feature_names_in_") else X.to_numpy())
+    elif not hasattr(m, "feature_names_in_"):
+        X = X.to_numpy()
+    if hasattr(m, "feature_names_in_") and not hasattr(X, "columns"):
+        X = pd.DataFrame(X, columns=FEATURE_COLS, index=f.index)
+    probs = np.asarray(m.predict_proba(X))
+    classes = list(m.classes_)
+    if 1 not in classes or probs.shape != (len(f), len(classes)):
+        raise ValueError("Model must expose classes_ including 1 and predict_proba(X)")
+    p = probs[:, classes.index(1)]
+    if not np.isfinite(p).all() or np.any((p < 0) | (p > 1)):
+        raise ValueError("Model returned invalid probabilities")
+    return p
 
 
 def get_prob(f, source):
@@ -37,23 +73,18 @@ def get_prob(f, source):
         s = pd.Series(s)
         e = np.exp(s - s.groupby(key).transform("max"))
         return (e / e.groupby(key).transform("sum")).to_numpy()
-    import joblib
-    m = joblib.load(os.path.join(ART, "model.joblib"))
-    X = f[FEATURE_COLS].to_numpy()
-    sp = os.path.join(ART, "scaler.joblib")
-    if os.path.exists(sp):
-        X = joblib.load(sp).transform(X)
-    return m.predict_proba(X)[:, 1]
+    m, scaler = load_model()
+    return model_probabilities(m, scaler, f)
 
 
 def load_data(source):
     D = {}
     for part in ("train", "student_test"):
-        f = pd.read_parquet(os.path.join(RES, f"features_{part}.parquet")) if part == "student_test" or \
-            os.path.exists(os.path.join(RES, "features_train.parquet")) else None
-        if f is None:
-            raise SystemExit("results/features_train.parquet missing: run src/build_features.py first")
-        p = pd.read_parquet(os.path.join(RES, f"points_{part}.parquet"))
+        path = os.path.join(ROOT, "results", f"features_{part}.parquet")
+        if not os.path.exists(path):
+            raise SystemExit(f"{path} missing: run src/build_features.py first")
+        f = pd.read_parquet(path)
+        p = pd.read_parquet(os.path.join(ROOT, "results", f"points_{part}.parquet"))
         f["prob"] = get_prob(f, source)
         pg = {k: v.sort_values("point_idx").reset_index(drop=True) for k, v in p.groupby("trip_id")}
         for tid, ft in f.groupby("trip_id", sort=True):
@@ -111,7 +142,7 @@ def make_splits(D, seed=0, n_each=10):
     gap = sorted(k for k in ok if D[k]["maxgap"] > 60)
     reg = sorted(k for k in ok if D[k]["maxgap"] <= 60)
     rng.shuffle(gap); rng.shuffle(reg)
-    gg, rr = max(1, len(gap) // 2), 2 * n_each
+    gg = max(1, len(gap) // 2)
     tune = gap[:gg] + reg[:n_each + 4]
     val = gap[gg:] + reg[n_each + 4: n_each + 4 + (len(tune) - (len(gap) - gg))]
     test = sorted(k for k, d in D.items() if d["part"] == "student_test")
@@ -119,18 +150,27 @@ def make_splits(D, seed=0, n_each=10):
 
 
 def main():
+    global decode
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", default="eval", choices=["eval", "tune"])
     ap.add_argument("--prob", default="mock", choices=["mock", "model"])
+    ap.add_argument("--decoder", default="multihop", choices=list(DECODERS))
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--save-config", action="store_true")
     a = ap.parse_args()
+    dec = DECODERS[a.decoder]
+    decode = dec["fn"]
+    GRID, DEFAULT = dec["grid"], dec["default"]
     os.makedirs(RES, exist_ok=True); os.makedirs(ART, exist_ok=True)
     D = load_data(a.prob)
     tune, val, test = make_splits(D, a.seed)
-    print(f"prob source={a.prob} | tune={len(tune)} val={len(val)} student_test={len(test)} trips "
+    tag = f"{a.decoder}_{a.prob}"
+    print(f"decoder={a.decoder} prob source={a.prob} | tune={len(tune)} val={len(val)} student_test={len(test)} trips "
           f"(gap>60s trips: tune {sum(D[k]['maxgap'] > 60 for k in tune)}, val {sum(D[k]['maxgap'] > 60 for k in val)})", flush=True)
-    cfg = dict(DEFAULT_CFG)
+    cfg = dict(DEFAULT)
+    cp = os.path.join(ART, dec["cfg_file"])
+    if a.mode == "eval" and os.path.exists(cp):
+        cfg = {**cfg, **{k: v for k, v in json.load(open(cp)).items() if k in DEFAULT}}
     if a.mode == "tune":
         log = []
         score = lambda c: eval_set(D, tune, c).acc_hmm.mean()
@@ -150,7 +190,7 @@ def main():
                         print(f"  round {rnd}: {p}={v} -> tune acc {s:.4f}", flush=True)
             if not improved:
                 break
-        pd.DataFrame(log).to_csv(os.path.join(RES, f"hmm_tuning_{a.prob}.csv"), index=False)
+        pd.DataFrame(log).to_csv(os.path.join(RES, f"hmm_tuning_{tag}.csv"), index=False)
         print("best config:", {k: cfg[k] for k in GRID})
     rows = []
     for name, keys in (("TUNE", tune), ("VAL", val), ("STUDENT_TEST", test)):
@@ -158,17 +198,15 @@ def main():
         rows.append(df)
         print(summary(df, name))
         if a.mode == "tune":
-            dd = eval_set(D, keys, DEFAULT_CFG)
-            print(summary(dd, name + " (default cfg)"))
+            print(summary(eval_set(D, keys, DEFAULT), name + " (default cfg)"))
     out = pd.concat(rows)
-    out.to_csv(os.path.join(RES, f"hmm_eval_{a.prob}.csv"), index=False)
-    print(out.sort_values("acc_hmm").head(0).to_string())
+    out.to_csv(os.path.join(RES, f"hmm_eval_{tag}.csv"), index=False)
     worse = out[out.acc_hmm < out.acc_clf - 0.01][["split", "trip_id", "n_points", "max_gap_s", "acc_clf", "acc_hmm"]]
     print("trips where the HMM is worse than classifier-only by >1pt:\n", worse.to_string(index=False) if len(worse) else "none")
     if a.save_config:
-        json.dump({**{k: cfg[k] for k in DEFAULT_CFG}, "tuned_on": f"{len(tune)} train trips, prob={a.prob}", "seed": a.seed},
-                  open(os.path.join(ART, "hmm_config.json"), "w"), indent=2)
-        print("saved artifacts/hmm_config.json")
+        meta = {"tuned_on": f"{len(tune)} train trips (seed {a.seed}), prob={a.prob}", "decoder": a.decoder}
+        json.dump({**{k: cfg[k] for k in DEFAULT}, **meta}, open(cp, "w"), indent=2)
+        print("saved", cp)
 
 
 if __name__ == "__main__":
