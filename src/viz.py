@@ -2,6 +2,8 @@
 (optionally) a predicted route. Reusable by the API/UI: make_trip_map(trip, pred_arcs=...)."""
 import numpy as np
 import folium
+import os
+from pathlib import Path
 from candidates import RoadNet
 
 LEGEND = """
@@ -21,16 +23,24 @@ def _arc_lines(net, trip, arc_ids):
     return [[[p[1], p[0]], [q[1], q[0]]] for p, q in zip(a, b)]   # folium wants (lat, lon)
 
 
-def make_trip_map(trip, out_html, pred_arcs=None, title=None, radius=100.0, max_points=3000):
+def make_trip_map(trip, out_html, pred_arcs=None, title=None, radius=100.0, max_points=3000, offline=False, point_errors=None):
     net = RoadNet(trip)
     tr = trip["track"]
     P = net.project_points(tr[:, 0], tr[:, 1])
     _, near = net.candidates(P, radius=radius, k=500, fallback=radius)
     net_arcs = np.unique(near)
     route = trip.get("route")
-    m = folium.Map(location=[tr[:, 1].mean(), tr[:, 0].mean()], zoom_start=15, tiles=None)
-    folium.TileLayer("OpenStreetMap", name="OpenStreetMap").add_to(m)
-    folium.TileLayer("CartoDB positron", name="Light basemap").add_to(m)
+    m = folium.Map(location=[tr[:, 1].mean(), tr[:, 0].mean()], zoom_start=15, tiles=None,
+                   zoom_animation=not offline, fade_animation=not offline, marker_zoom_animation=not offline)
+    if offline:
+        # Report rendering uses only local Leaflet assets and no tile providers.
+        vendor = Path(__file__).resolve().parents[1] / 'ui/vendor/leaflet'
+        relative = lambda name: os.path.relpath(vendor/name, Path(out_html).resolve().parent).replace('\\', '/')
+        m.default_js = [('leaflet', relative('leaflet.js'))]
+        m.default_css = [('leaflet_css', relative('leaflet.css'))]
+    else:
+        folium.TileLayer("OpenStreetMap", name="OpenStreetMap").add_to(m)
+        folium.TileLayer("CartoDB positron", name="Light basemap").add_to(m)
 
     g = folium.FeatureGroup(name=f"Road network ({len(net_arcs)} arcs near track)", show=True)
     folium.PolyLine(_arc_lines(net, trip, net_arcs), color="#888888", weight=2, opacity=0.7).add_to(g)
@@ -55,11 +65,27 @@ def make_trip_map(trip, out_html, pred_arcs=None, title=None, radius=100.0, max_
         folium.CircleMarker([tr[i, 1], tr[i, 0]], radius=3, color="#ffffff", fill=True, fillColor="#1f77b4",
                             fill_opacity=0.95, weight=0.6, tooltip=f"pt {i}, t={tr[i, 2]:.0f}s").add_to(g)
     g.add_to(m)
-    folium.Marker([tr[0, 1], tr[0, 0]], tooltip="start", icon=folium.Icon(color="green")).add_to(m)
-    folium.Marker([tr[-1, 1], tr[-1, 0]], tooltip="end", icon=folium.Icon(color="red")).add_to(m)
+    if point_errors is not None:
+        if len(point_errors) != len(tr):
+            raise ValueError('point_errors must have one flag per GPS observation')
+        wrong = np.flatnonzero(point_errors)
+        g = folium.FeatureGroup(name=f'Wrong arc vs derived reference ({len(wrong)} points)', show=True)
+        for i in wrong:
+            folium.CircleMarker([tr[i, 1], tr[i, 0]], radius=5, color='#e67e00',
+                                weight=2, fill=False, tooltip=f'pt {i}: predicted arc differs from derived reference').add_to(g)
+        g.add_to(m)
+    if offline:
+        for row, color, label in [(tr[0], '#2ca02c', 'start'), (tr[-1], '#d62728', 'end')]:
+            folium.CircleMarker([row[1], row[0]], radius=6, color=color, fill=True,
+                                fill_opacity=1, tooltip=label).add_to(m)
+    else:
+        folium.Marker([tr[0, 1], tr[0, 0]], tooltip="start", icon=folium.Icon(color="green")).add_to(m)
+        folium.Marker([tr[-1, 1], tr[-1, 0]], tooltip="end", icon=folium.Icon(color="red")).add_to(m)
 
     m.fit_bounds([[tr[:, 1].min(), tr[:, 0].min()], [tr[:, 1].max(), tr[:, 0].max()]])
     pred_row = '<span style="color:#d62728">&#9473;</span> Predicted route<br>' if pred_arcs is not None else ""
+    if point_errors is not None:
+        pred_row += '<span style="color:#e67e00">&#9675;</span> Wrong arc vs derived reference<br>'
     m.get_root().html.add_child(folium.Element(
         LEGEND.format(title=title or f"Trip {trip['trip_id']}", pred=pred_row)))
     folium.LayerControl(collapsed=False).add_to(m)
