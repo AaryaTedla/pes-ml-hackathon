@@ -1,217 +1,178 @@
 # 5. HMM and Viterbi Route Reconstruction
 
-## 5.1 Why we added a sequential decoder
+## 5.1 States and emission scores
 
-Selecting the highest-scoring road independently at each GPS point can produce a
-route that repeatedly switches between nearby streets or between opposite directions
-of the same road. We therefore compared two Viterbi decoders using identical candidate
-arcs and identical mock probabilities: a fixed-transition decoder in `src/hmm_fixed.py`
-and a multi-hop decoder in `src/hmm.py`. The API uses the multi-hop variant. These
-experiments measure the effect of sequential decoding with a heuristic emission;
-they are not results from the final trained classifier.
+A GPS point can be close to several roads. Choosing a road separately for every
+point can make the predicted route jump between them. We tested whether using the
+previous and next predictions helps resolve this ambiguity.
 
-## 5.2 Hidden states and emissions
+At each GPS point, the possible hidden states are its candidate directed road arcs.
+We keep `point_idx` and `arc_id` with each candidate. The decoder returns one arc ID
+per point, or -1 when there are no candidates. Each trip uses its own road graph.
+The reference route is used for scoring after prediction, never as decoder input.
 
-At observation t, each hidden state is one of that observation's candidate directed
-road arcs. We preserve `point_idx` and `arc_id`, so a selected candidate maps directly
-to a row of the trip's own `.arcs` file. Both decoders return an integer NumPy array
-with one arc ID per GPS point. If no candidate exists, that position receives -1.
-Neither decoder uses the reference route as an inference input.
-
-Until the selected classifier is available, we use the following stand-in score:
+Both variants currently use the same mock probabilities:
 
 ```
-z_t(a) = -dist_m(t,a) / 10 + 3 * cos_head(t,a)
-p_t(a) = exp(z_t(a)) / sum_b exp(z_t(b))
-e_t(a) = log(max(p_t(a), epsilon))
+score(a) = -dist_m(a)/10 + 3*cos_head(a)
+prob(a) = softmax(score(a))       # separately for each GPS point
+emission(a) = log(max(prob(a), epsilon))
 ```
 
-The softmax is calculated separately for each observation, after subtracting its
-largest score for numerical stability. Distance is in metres; dividing by 10 makes
-the score dimensionless. The heading term favours travel along an arc rather than
-against it, which helps distinguish reverse arcs with identical geometry. These
-probabilities are heuristic scores, not calibrated outputs of a fitted classifier.
-The fixed decoder clips at 1e-300 before taking logs; the multi-hop configuration
-uses epsilon = 1e-6. When 496's selected model arrives, its positive-class
-probabilities must replace the mock emissions consistently in both experiments.
+Distance favours nearby roads. Heading helps distinguish the two travel directions
+on the same road. Before softmax, we subtract the largest score for that point to
+avoid large exponentials. The fixed decoder uses a probability floor of 1e-300;
+the multi-hop decoder uses 1e-6. These scores are a stand-in until the trained
+classifier arrives. They should not be reported as trained-model probabilities.
 
-## 5.3 Transition models
+## 5.2 Two transition designs
 
-The fixed decoder uses three dimensionless log compatibility scores: 0 for staying
-on the same arc, -0.2 for moving to an arc whose start node is the previous arc's end
-node, and -12 for other movements. It does not search for intermediate connector
-arcs. This makes it fast and strongly favours directly adjacent predictions, but
-legitimate movements across several short road segments can receive a jump penalty.
-The selected fixed configuration is `artifacts/hmm_fixed_config.json`.
+The fixed decoder, `src/hmm_fixed.py`, gives a log score of 0 for staying on an arc,
+-0.2 for moving to a directly adjacent arc, and -12 for other movements. Adjacent
+means the first arc ends at the node where the next arc starts. It is cheap to
+compute, but crossing several road segments between GPS samples receives the same
+penalty as an unrelated jump. Its settings are in `artifacts/hmm_fixed_config.json`.
 
-The multi-hop decoder searches directed arc adjacency using a memoised,
-depth-limited breadth-first search. Staying on an arc has zero cost. A reachable
-arc h hops away costs `hop_penalty * h`; an immediate reverse twin uses a separate
-U-turn penalty. An arc not found within the search depth receives a finite jump
-penalty. Search depth increases with elapsed time:
+The multi-hop decoder, `src/hmm.py`, also allows travel through intermediate arcs.
+It uses breadth-first search on directed arc connections and caches the results.
+The search is limited by a hop depth, which increases for longer sampling intervals:
 
 ```
-depth = max_hops + floor(min(dt, gap_s) / gap_hop_s)
+depth = max_hops + floor(min(dt, gap_s)/gap_hop_s)
 ```
 
-The committed configuration uses hop_penalty=4, jump_penalty=40,
+Staying on an arc costs zero. Reaching another arc in h hops costs
+`hop_penalty*h`. An immediate move to the reverse arc has its own U-turn cost.
+If the search does not find the next arc, the decoder applies a jump cost.
+The current mock configuration uses hop_penalty=4, jump_penalty=40,
 uturn_penalty=16, max_hops=5, gap_s=120 seconds and gap_hop_s=5 seconds.
-These are hop-based costs, not physical distances or travel times. In particular,
-the active multi-hop decoder does not run a metric shortest-path calculation or
-compare road distance with GPS displacement. The bounded Dijkstra experiment in
-`hmm_fixed.py` is a separate optional mode and is not the variant compared here.
+It is saved in `artifacts/hmm_config.json` and is the variant used by the API.
 
-Both variants use unnormalised compatibility potentials rather than a fully
-calibrated generative HMM. A finite jump cost allows recovery when candidate sets
-are poor; it does not guarantee a connected output. Neither decoder inserts
-intermediate connector arcs into its per-point output.
+These costs are dimensionless scores. A hop is an arc transition, not a distance
+in metres. The active multi-hop decoder does not calculate metric shortest paths.
+The optional Dijkstra mode in `hmm_fixed.py` is a separate experiment and is not
+included in this two-variant comparison.
 
-## 5.4 Viterbi, gaps and missing observations
+Both designs use finite penalties for unlikely movements. This lets decoding
+continue when the candidate set is poor, but it also allows a disconnected result.
+The output assigns arcs to GPS points; neither variant inserts connector arcs.
+The scores act as compatibility weights rather than calibrated transition
+probabilities.
 
-For candidate j at observation t, we calculate:
+## 5.3 Viterbi and gaps
+
+We find the best sequence with the log-space Viterbi recurrence:
 
 ```
-V_t(j) = e_t(j) + max_i [V_(t-1)(i) + T_t(i,j)]
+V_t(j) = emission_t(j) + max_i [V_(t-1)(i) + transition_t(i,j)]
 ```
 
-Here T is the fixed log score or the negative multi-hop cost. For every candidate,
-we store the predecessor that maximises the expression. After the forward pass,
-we start from the highest-scoring final candidate and follow those predecessors
-backwards. This finds the best complete candidate sequence under the chosen model,
-rather than making a greedy choice at each observation. Log scores avoid multiplying
-many small probabilities. The fixed decoder also subtracts the largest cumulative
-score at each step; this leaves the best path unchanged.
+For each candidate j, we keep the best score of a sequence ending there and the
+previous candidate that gave that score. After the forward pass, we backtrack from
+the best final candidate. This differs from choosing the largest emission at every
+point: a slightly weaker local choice can belong to a better complete sequence.
+Adding log scores avoids multiplying many small probabilities. The fixed decoder
+also subtracts the maximum score at each step, without changing the winning path.
 
-The fixed variant starts a new sequence after a gap above 5 seconds, a nonpositive
-or nonfinite timestamp difference, or an observation with no candidates. In the
-multi-hop variant, gaps above 120 seconds set all cross-gap transition costs to
-zero, making the new observation independent of the previous state choice.
-Candidate-less observations remain -1, but the multi-hop chain links the surrounding
-observations using the elapsed time between them. Its implementation substitutes
-1 second for nonpositive elapsed times. These behaviours differ and should not be
-described as identical resets. Nonfinite timestamp validation is not explicitly
-implemented in the active multi-hop decoder.
+The fixed decoder restarts after a gap above 5 seconds or a missing-candidate point.
+It also restarts for nonpositive or nonfinite time differences. The multi-hop decoder
+sets transition costs to zero across gaps above 120 seconds. Missing-candidate
+points remain -1, while decoding continues between the surrounding available points
+using their elapsed time. For nonpositive time differences it substitutes 1 second;
+it has no explicit check for nonfinite timestamps. These are different gap policies.
 
-## 5.5 Experimental protocol and evidence
+## 5.4 Experiment and metrics
 
-The committed multi-hop result file, `results/hmm_eval_mock.csv`, contains 54 trips:
-22 TUNE training trips, 22 VAL training trips and all 10 student_test trips. Its
-split construction uses seed 0, excludes training trips with candidate miss rate
-above 5%, and excludes training trips above 8,000 points. Thus this 54-trip comparison
-is not a full evaluation of every training trip or of the longest speed-test trip.
-Multi-hop parameters were selected using its TUNE trips; trials are recorded in
-`results/hmm_tuning_mock.csv`.
+The comparison covers the same 54 trips: 22 training trips labelled TUNE, 22 labelled
+VAL, and 10 student_test trips. The split uses seed 0. Training trips with candidate
+miss rate above 5% or more than 8,000 points are excluded from this comparison.
+It therefore does not cover every training trip or the longest speed-test trip.
+The multi-hop tuning log is `results/hmm_tuning_mock.csv`.
 
-We reproduced the fixed decoder on exactly those trip IDs using its existing
-configuration, without selecting parameters on the student_test trips. The mock
-classifier baseline matched the committed baseline on all 54 trips. We then ran
-both variants on the same inputs to record sequence scores and paired timings in
-the new file `results/hmm_two_variant_same54_mock.csv`; original result files were
-not overwritten. Each timing measures decoding only, excludes feature generation,
-and reflects one run with fixed decoding executed before multi-hop decoding.
-The script and run metadata are in `report/evidence/`.
+The main comparison is saved in `results/hmm_decoder_comparison_mock.csv` and
+`results/hmm_decoder_comparison_mock_per_trip.csv`. The additional run in
+`results/hmm_two_variant_same54_mock.csv` supplies sequence scores. Its classifier
+baseline and multi-hop accuracy matched the earlier results on all 54 trips.
 
-Tejas subsequently committed the same 54-trip comparison in
-`results/hmm_decoder_comparison_mock.csv` and its per-trip companion
-`results/hmm_decoder_comparison_mock_per_trip.csv`. Their accuracy and continuity
-agree with the values below after rounding. That committed run records total
-multi-hop versus fixed decoding times of 3.2968 versus 0.8492 seconds for VAL,
-and 1.1214 versus 0.3176 seconds for student_test, supporting the approximate
-fourfold speed advantage in that run. Our additional paired run supplies sequence
-scores and a separate timing measurement; its timings should not be substituted
-for or mixed with Tejas's run.
+One limitation is that the two variants were tuned on different trip sets. The fixed
+variant was tuned earlier on 90, 69, 42, 03 and 05; 90, 69 and 42 appear in the other
+variant's VAL set. We retain the saved split labels below, but VAL is not untouched
+validation for both variants. The final comparison needs one common split.
 
-To reproduce from the repository root, choose a fresh output file:
+We use the shared functions in `src/evaluate.py`. Point accuracy counts correct arc
+IDs on observations whose derived reference arc is within 60 metres of the GPS
+point. This matches the 54-trip evaluator; the earlier nine-trip experiment instead
+used `has_positive`. Route-derived labels are an approximation of the road travelled.
+The reported averages give each trip equal weight.
 
-```powershell
-python report/evidence/reproduce_hmm_comparison.py --data-root "../Student folder" --output results/hmm_comparison_new_run.csv
-```
-
-The helper refuses to overwrite an existing output path. The earlier batch script
-still uses fixed result filenames and should not be run over the committed evidence.
-
-There is a split limitation: the fixed decoder was previously tuned on trips
-90, 69, 42, 03 and 05. Trips 90, 69 and 42 appear in the multi-hop VAL set. We therefore
-report the shared VAL label for traceability but do not claim it is untouched
-validation for the fixed decoder. A final fair selection experiment should use one
-common tuning/validation split for both decoders with the trained emissions.
-
-Point accuracy in this same-54 comparison uses reference labels within 60 metres
-of the observation, matching the committed multi-hop evaluator. This differs from
-the earlier nine-trip fixed experiment, which scores `has_positive` points. These
-reference labels were derived from ordered route arcs and are not independently
-verified physical truth. All tabulated aggregate values are unweighted means over
-trips, rather than pooling all GPS points.
-
-Route continuity uses `src/evaluate.py`: among changes in predicted arc ID, it
-measures the fraction for which the first arc ends at the second arc's start node.
-Repeated arc IDs are excluded from its denominator; a trip with no changes returns
-1. Missing IDs are filtered before this metric in the paired comparison, so it can
-bridge candidate-less observations. This is direct adjacency, not multi-hop
-reachability. A valid multi-hop movement can therefore lower the reported continuity.
-Sequence performance is the fraction of non-overlapping 50-point windows with every
-prediction equal to its reference label. Sequence scores use all points, without the
-60-metre accuracy mask; trailing incomplete windows are omitted.
+Continuity counts directly connected changes in arc ID. Repeated IDs are excluded
+from the denominator, and a trip with no changes receives 1. Missing predictions
+are filtered before scoring, which can join observations across a missing point.
+This metric does not credit a connection through intermediate arcs. Sequence score
+is the fraction of non-overlapping 50-point windows whose predictions all match the
+reference. It uses all points, without the accuracy mask, and drops an incomplete
+window at the end.
 
 ### TUNE (22 trips)
 
-| Pipeline | Point accuracy | Exact 50-point windows | Direct continuity | Mean decode time/trip |
-|---|---:|---:|---:|---:|
-| Mock classifier only | 77.86% | 4.70% | 66.07% | Not measured |
-| Fixed HMM | 81.08% | 8.02% | 98.74% | 0.312 s |
-| Multi-hop HMM | 84.03% | 10.26% | 89.44% | 0.672 s |
+| Pipeline | Point accuracy | Exact 50-point windows | Direct continuity |
+|---|---:|---:|---:|
+| Mock classifier only | 77.86% | 4.70% | 66.07% |
+| Fixed HMM | 81.08% | 8.02% | 98.74% |
+| Multi-hop HMM | 84.03% | 10.26% | 89.44% |
 
 ### VAL (22 trips)
 
-| Pipeline | Point accuracy | Exact 50-point windows | Direct continuity | Mean decode time/trip |
-|---|---:|---:|---:|---:|
-| Mock classifier only | 80.87% | 6.28% | 68.72% | Not measured |
-| Fixed HMM | 84.35% | 8.12% | 97.01% | 0.429 s |
-| Multi-hop HMM | 86.95% | 9.94% | 91.88% | 0.928 s |
+| Pipeline | Point accuracy | Exact 50-point windows | Direct continuity |
+|---|---:|---:|---:|
+| Mock classifier only | 80.87% | 6.28% | 68.72% |
+| Fixed HMM | 84.35% | 8.12% | 97.01% |
+| Multi-hop HMM | 86.95% | 9.94% | 91.88% |
 
 ### STUDENT_TEST (10 trips)
 
-| Pipeline | Point accuracy | Exact 50-point windows | Direct continuity | Mean decode time/trip |
-|---|---:|---:|---:|---:|
-| Mock classifier only | 81.36% | 10.38% | 70.48% | Not measured |
-| Fixed HMM | 83.84% | 11.18% | 99.32% | 0.351 s |
-| Multi-hop HMM | 85.82% | 12.70% | 89.83% | 0.716 s |
+| Pipeline | Point accuracy | Exact 50-point windows | Direct continuity |
+|---|---:|---:|---:|
+| Mock classifier only | 81.36% | 10.38% | 70.48% |
+| Fixed HMM | 83.84% | 11.18% | 99.32% |
+| Multi-hop HMM | 85.82% | 12.70% | 89.83% |
 
-Source: `results/hmm_two_variant_same54_mock.csv`. Paired-run decode times are descriptive, not a controlled benchmark; the historical fourfold speed claim is not reproduced here. In this run the fixed decoder took about half the multi-hop decoding time on VAL and student_test.
+Timings depend on the machine and run conditions. In the committed comparison run,
+total decoding time across the 22 VAL trips was 3.2968 seconds for multi-hop and
+0.8492 seconds for fixed transitions (`results/hmm_decoder_comparison_mock.csv`).
+These totals exclude feature preparation and API overhead. We do not use timings
+from the separate sequence-score run for this speed comparison.
 
-## 5.6 Improvements, failure cases and interpretation
+## 5.5 What helped and what did not
 
-The multi-hop variant has higher mean point accuracy than the fixed variant on both
-VAL and student_test. Its ability to cross intermediate road segments is consistent
-with that result, although this experiment alone does not establish the cause. The
-fixed variant has higher direct-adjacency continuity. That reflects both its stronger
-adjacency preference and a metric that does not credit multi-hop connections.
-Continuity alone is therefore insufficient for choosing the final decoder.
+Multi-hop decoding gave higher mean accuracy than fixed transitions on VAL and
+student_test. Fixed transitions gave higher direct continuity. This is a useful
+trade-off: fixed transitions favour adjacent predictions, while multi-hop decoding
+allows roads between two observations to be skipped. The continuity metric penalises
+such skips even when the graph has a valid connecting path.
 
-Trip 00000078 is a useful counterexample from the earlier nine-trip experiment
-(`results/hmm_fixed_batch.csv`). Classifier-only accuracy was 82.09%, while fixed HMM
-accuracy fell to 80.47%; direct continuity rose from 76.98% to 95.37%. Its maximum
-recorded gap is 52,810 seconds. A plausible explanation is that the transition cost
-favoured a coherent but incorrect road sequence; locating the precise cause would
-require inspecting predictions on the map. Higher continuity did not ensure a more
-accurate route. On this trip the committed multi-hop run achieved 86.49% accuracy
-and 84.86% direct continuity. Trip 78 belongs to multi-hop TUNE, so that figure is not
-an independent validation result. Its reference coverage is complete in the saved
-comparison, making its accuracy directly comparable across these two masks.
+Trip 00000078 shows why continuity alone is not enough. In the earlier nine-trip
+results (`results/hmm_fixed_batch.csv`), fixed decoding reduced accuracy from
+82.09% to 80.47%, although continuity increased from 76.98% to 95.37%. The largest
+gap was 52,810 seconds. The decoder may have favoured a connected but wrong route;
+we would need to inspect the map to establish where and why this happened.
+Multi-hop decoding reached 86.49% accuracy and 84.86% direct continuity on this
+trip in the saved comparison. Trip 78 is in multi-hop TUNE, so that result is not
+independent validation. Its reference coverage is complete, so the two scoring
+masks do not affect this particular accuracy comparison.
 
-We retain the multi-hop variant in the API because of its measured accuracy advantage,
-while keeping fixed transitions as a faster alternative. Final conclusions depend
-on rerunning and retuning both variants with 496's real classifier probabilities.
-No evaluator trips were accessed or used in these experiments. AI assistance was
-used for implementation, verification and this draft; team members must review the
-explanation and be able to defend the code and results in the viva.
+## 5.6 Update after the classifier handoff
 
-## Viva preparation
+All tables above use mock emissions. Once SRN 496 supplies the selected model,
+replace the mock scores with its positive-class probabilities in both decoders.
+Retune both variants on the same whole-trip tuning set, then score the separate
+validation and student_test trips. Update the configuration values, tables, timing
+example and failure analysis from those runs; retain the mock results as a baseline.
+The numbers here should not be treated as the final model's performance.
 
-- A hidden state is a directed candidate road arc, not a GPS coordinate or route index.
-- Emissions score observation-to-arc agreement; transitions score successive arc compatibility.
-- Viterbi optimises a complete sequence; choosing the best emission independently is the baseline.
-- Finite penalties permit recovery but allow disconnected predictions. The output does not expand connector arcs.
-- Fixed adjacency scores are cheap; multi-hop BFS recognises intermediate segments, but hop counts are not metres.
-- Better continuity can coexist with worse accuracy, as trip 78 demonstrates.
-- Mock scores are not trained-model results, and the two historical tuning splits differ.
+Use a fresh output filename for every new run. The reproduction helper in
+`report/evidence/reproduce_hmm_comparison.py` refuses to overwrite an existing file;
+it currently reproduces mock results and must be adapted for trained probabilities.
+Existing committed results were not changed for this revision. No evaluator trips
+were used. AI assistance was used for implementation and drafting; the team must
+review the explanation before submission.
