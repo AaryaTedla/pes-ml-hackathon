@@ -62,10 +62,10 @@ Every trip has **its own** road network. There are **no labels per GPS point**, 
 | `src/` | all pipeline code (steps 1 to 8), evaluation and report tools |
 | `api/` | FastAPI service: `main.py` (endpoints), `predictor.py` (model + HMM), `scoring.py` (server-only scoring), `config.py` |
 | `ui/` | the browser page (HTML, CSS, JavaScript, local Leaflet) |
-| `notebooks/` | the Kaggle notebooks that trained the models |
+| `notebooks/` | the Kaggle notebooks that trained the models: `train_compare_all_models` (all five), and `train_compare_fast_models` / `train_compare_slow_models` (the same comparison split in two so they could run in parallel) |
 | `artifacts/` | `model.joblib` (trained model), `feature_columns.json`, `hmm_config.json` and `hmm_fixed_config.json` (tuned decoder settings) |
 | `results/` | `features_*.parquet` and `points_*.parquet` (data tables), `eda/`, `figures/`, `maps/`, `models/`, `hmm/` |
-| `results/models/` | `model_comparison/` (the 5-model run), `rf_tuning/` (the Optuna run that produced the model), `rf_tuning_first_attempt/` (an earlier interrupted run) |
+| `results/models/` | `model_comparison/` (the 5-model run), `rf_tuning/` (the Optuna run that produced the model), `rf_tuning_first_attempt/` (an earlier interrupted run), `kaggle_run_outputs.zip` (the raw Kaggle output, including the fitted models) |
 | `results/hmm/` | `final/` (decoders with the trained model), `stand_in/` (earlier experiments with a hand-made scoring rule, kept as a baseline) |
 | `report/` | report sections, `FULL_REPORT_DRAFT.md/.pdf`, `numbers_sheet.md` |
 | `scripts/` | `run_api.bat`, `check_all_trips.py`, `integrate_model.py`, `open_firewall.ps1` |
@@ -105,3 +105,10 @@ python src/build_report_draft.py --pdf
 - **Route continuity**: of the times the predicted arc changes, how often is the new arc directly connected to the previous one?
 - **Cross-validation grouped by trip**: folds never split a trip, so the model is always tested on trips it has not seen.
 - **TUNE / VAL / student_test**: 22 training trips used to choose the HMM settings, 22 other training trips to check them, and the 10 student-test trips as a final check.
+
+## 9. Naming notes
+
+- **"mock" and "stand_in" mean the same thing:** the hand-made scoring rule (softmax of distance and heading) we used to build and test the HMM before the trained model existed. Files with `mock` in the name, and the folder `results/hmm/stand_in/`, hold those earlier results. The command-line option `--prob mock` selects that rule and `--prob model` selects the trained model.
+- **`report/section_3_4_models.md`** covers both section 3 (models) and section 4 (Bayesian optimisation); the report builder splits it.
+- **Requirements files:** `requirements.txt` (exact versions to run everything), `requirements-dev.txt` (adds the test tools), `requirements-training.txt` (the Kaggle training environment), `requirements-figures.txt` (optional, only for automatic map screenshots) and `requirements-lock.txt` (the full list of package versions from the API developer's machine, for reference).
+- **`results/hmm/final/`** is what the report uses. **`results/hmm/stand_in/`** is the earlier baseline.

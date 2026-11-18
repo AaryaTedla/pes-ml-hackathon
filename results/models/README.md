@@ -1,6 +1,6 @@
 # Model experiments (Track B, run on Kaggle by SRN 496)
 
-- `pathsnap_deadline_results.zip` is the full output of the Kaggle runs: the five fitted models, their student_test score tables,
+- `kaggle_run_outputs.zip` is the full output of the Kaggle runs: the five fitted models, their student_test score tables,
   the Optuna study databases and the tuned Random Forest. Unzip to inspect.
 - The small readable files from the zip are also unpacked here:
   - `model_comparison/`: the 5-model comparison (`comparison.csv`, `metrics.csv`, `metadata.json`, plots, per-model configs and loss curves)

@@ -1,7 +1,7 @@
 # Track B training — Aarya PES1UG24CS496
 
 Source: `src/train_models.py`. Runnable, self-contained Kaggle notebooks are in
-`notebooks/PathSnap_Deadline_{All,Fast,Slow}.ipynb`. All runs five models; Fast/Slow
+`notebooks/train_compare_{all,fast,slow}_models.ipynb`. All runs five models; Fast/Slow
 split the same protocol across two sessions. Attach the private feature dataset.
 The notebook installs the original experiment's exact repository pins and
 Optuna 5.1.0, then requires a session restart before imports. Local equivalent:
