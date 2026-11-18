@@ -112,6 +112,8 @@ Evidence: [search-space configuration, complete trial CSV, best parameters and p
 
 Owner: 549.
 
+Draft text and evidence: [Section 5 HMM draft](section_5_hmm.md).
+
 1. Define the hidden states and their relation to candidate arc IDs.
 2. Explain emission probabilities from the chosen classifier.
 3. Explain graph-aware transition probabilities and their units.
