@@ -31,9 +31,13 @@ def main():
     parser.add_argument('--partition', choices=['train', 'student_test'], default='train')
     parser.add_argument('--trips', nargs='+')
     parser.add_argument('--tune', action='store_true')
+    parser.add_argument('--mode', choices=['fixed', 'network'], default='fixed')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     cfg = json.loads((root/'artifacts/hmm_config.json').read_text())
+    cfg['mode'] = args.mode
+    if args.mode == 'network':
+        cfg.update(network_cutoff_m=250., max_search_nodes=128, beta_m=30.)
     labels = pd.read_parquet(root/f'results/points_{args.partition}.parquet')
     requested = args.trips or (TUNE + CHECK if args.partition == 'train' else sorted(labels.trip_id.astype(str).str.zfill(8).unique()))
     tune_ids = set(TUNE) if args.partition == 'train' else set()
@@ -42,6 +46,8 @@ def main():
         if args.partition != 'train' or args.trips:
             parser.error('--tune uses only the predefined whole-train-trip split')
         trials = [{**cfg, 'disconnected_log': p, 'gap_s': gap} for p in [-4., -8., -12.] for gap in [5., 30.]]
+        if args.mode == 'network':
+            trials = [{**cfg, 'beta_m': beta, 'gap_s': gap} for beta in [10., 30., 60.] for gap in [5., 30.]]
     # Candidate extraction is done once per trip. Validation labels never select parameters.
     cache, prep_times = {}, {}
     for tid in requested:
@@ -64,8 +70,10 @@ def main():
             print(f'trial {number}: train-trip macro accuracy {np.mean(scores):.6f}', flush=True)
         macro = pd.DataFrame(trial_rows).groupby('trial').accuracy.mean()
         cfg = trials[int(macro.idxmax())]
-        (root/'artifacts/hmm_config.json').write_text(json.dumps(cfg, indent=2))
-        pd.DataFrame(trial_rows).to_csv(root/'results/hmm_tuning.csv', index=False)
+        # Network is opt-in until its held-out performance and latency are reviewed.
+        target = 'hmm_config.json' if args.mode == 'fixed' else 'hmm_network_config.json'
+        (root/'artifacts'/target).write_text(json.dumps(cfg, indent=2))
+        pd.DataFrame(trial_rows).to_csv(root/f'results/hmm_{args.mode}_tuning.csv', index=False)
     rows = []
     for tid in requested:
         trip, feats, truth = cache[tid]
@@ -79,8 +87,8 @@ def main():
                          classifier_continuity=route_continuity(baseline, trip['arcs']),
                          **measure(trip, feats, truth, cfg)))
     result = pd.DataFrame(rows)
-    result.to_csv(root/'results/hmm_batch.csv', index=False)
-    (root/'results/hmm_run.json').write_text(json.dumps(dict(config=cfg, python=platform.python_version(),
+    result.to_csv(root/f'results/hmm_{args.mode}_batch.csv', index=False)
+    (root/f'results/hmm_{args.mode}_run.json').write_text(json.dumps(dict(config=cfg, python=platform.python_version(),
         numpy=np.__version__, pandas=pd.__version__, partition=args.partition, tune_trips=TUNE,
         check_trips=CHECK, seed=None, note='Deterministic mock; accuracy uses has_positive; shared continuity counts changed arcs only; preparation timing includes mock probabilities.'), indent=2))
     print(result.to_string(index=False))

@@ -33,6 +33,16 @@ class HMMTests(unittest.TestCase):
         np.testing.assert_allclose(result.groupby('point_idx').prob.sum(), 1.)
         self.assertGreater(result.prob[0], result.prob[1])
 
+    def test_bounded_network_mode(self):
+        trip = dict(nodes=np.array([[0., 0.], [.0001, 0.], [.0002, 0.]]),
+                    arcs=np.array([[0, 1], [1, 2]]),
+                    track=np.array([[.00002, 0., 0.], [.00015, 0., 1.]]))
+        rows = pd.DataFrame(dict(point_idx=[0, 0, 1, 1], arc_id=[0, 1, 0, 1],
+                                 prob=[.99, .01, .1, .9]))
+        before = rows.copy(deep=True)
+        np.testing.assert_array_equal(decode(trip, rows, {'mode': 'network'}), [0, 1])
+        pd.testing.assert_frame_equal(rows, before)
+
 
 if __name__ == '__main__':
     unittest.main()

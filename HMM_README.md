@@ -41,3 +41,34 @@ No evaluator trips are read. Runs are deterministic. AI assistance was used.
 
 The materials ZIP and guideline PDF were not present at the searched Downloads or
 repository paths. Report compliance with sections 8–9 is not yet verified.
+
+## Whole-trip validation
+
+All nine requested train trips were run. Six fixed-transition configurations were
+selected only on train 90/69/42/03/05. The selected configuration resets after 5 s
+and uses disconnected log potential -12. On held-out train 78/21/81/10, macro trip
+accuracy increased from 74.56% to 81.61%, and shared changed-arc continuity from
+64.08% to 97.20%. Trip 78 regressed (82.09% to 80.47%). Trip 21 (15,783 points)
+decoded in 0.46 s; this excludes feature preparation (0.18 s locally). No predictions
+were missing on these trips. Times depend on the laptop and exclude API overhead.
+
+Optional `mode: network` implements directed endpoint shortest paths, capped at
+250 m and 128 settled nodes per source, with a 2048-source LRU cache. It penalises
+|network distance - GPS displacement| / beta and supports forward progress within
+an arc. Budgets can mark a reachable pair unavailable; these use a finite fallback
+penalty. Six network configurations were tried on the same tuning trips. Best
+network tuning accuracy was 77.83%, versus 83.94% for fixed transitions; therefore
+fixed mode remains selected. The network variant is experimental, not an improvement
+in the measured results. Its config is saved separately as hmm_network_config.json.
+Use `--mode network --tune` to reproduce that experiment.
+
+Current authoritative outputs are results/hmm_fixed_{batch,tuning}.csv,
+results/hmm_network_{batch,tuning}.csv and their *_run.json metadata files.
+Four HMM tests pass, including network mode, missing-candidate -1 behaviour,
+nonfinite probability rejection, log-space underflow resilience, and gap resets.
+The tests are synthetic correctness checks, separate from the nine real-trip runs.
+
+Report explanation: the HMM stabilises ambiguous candidate choices by rewarding
+adjacent roads. It can also oversmooth and stay on a plausible but wrong road, as
+trip 78 shows. Distance-only shortest paths struggled with this mock emission and
+reference-label setup; do not claim network mode improves generalisation.
