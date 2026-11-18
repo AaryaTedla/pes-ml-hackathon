@@ -85,6 +85,7 @@ def main():
                          max_gap_s=float(np.diff(trip['track'][:, 2]).max()),
                          classifier_accuracy=pointwise_accuracy(baseline, truth.true_arc.to_numpy(), mask),
                          classifier_continuity=route_continuity(baseline, trip['arcs']),
+                         classifier_sequence_exact_50=sequence_exact_rate(baseline, truth.true_arc.to_numpy()),
                          **measure(trip, feats, truth, cfg)))
     result = pd.DataFrame(rows)
     result.to_csv(root/f'results/hmm_{args.mode}_batch.csv', index=False)

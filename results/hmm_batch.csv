@@ -1,2 +1,0 @@
-trip_id,partition,split,points,scored_points,prepare_s,max_gap_s,classifier_accuracy,classifier_continuity,accuracy,continuity,sequence_exact_50,decode_s,missing_predictions
-00000003,train,tune,821,821,0.13274729999920964,2.0,0.6613885505481121,0.29357798165137616,0.7198538367844093,0.9337748344370861,0.0,0.03489199999967241,0

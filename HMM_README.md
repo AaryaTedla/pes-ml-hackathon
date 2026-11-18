@@ -34,13 +34,11 @@ Shared metrics from src/evaluate.py are used. Its continuity metric counts chang
 arc pairs only, unlike the original prototype's same-or-adjacent metric. Missing
 predictions require care when interpreting continuity; the tested trips report
 missing counts. Fifty-point exact-match windows include all reference points.
-Outputs: results/hmm_tuning.csv, hmm_batch.csv, hmm_run.json.
+Outputs: mode-specific batch, tuning CSVs and run JSON files (see below).
 Historical hmm_demo.json and hmm_predictions.csv describe the superseded shortest-
 path prototype with different mock settings; do not mix them with current results.
 No evaluator trips are read. Runs are deterministic. AI assistance was used.
 
-The materials ZIP and guideline PDF were not present at the searched Downloads or
-repository paths. Report compliance with sections 8–9 is not yet verified.
 
 ## Whole-trip validation
 
@@ -72,3 +70,29 @@ Report explanation: the HMM stabilises ambiguous candidate choices by rewarding
 adjacent roads. It can also oversmooth and stay on a plausible but wrong road, as
 trip 78 shows. Distance-only shortest paths struggled with this mock emission and
 reference-label setup; do not claim network mode improves generalisation.
+
+## Guidelines sections 8-9 (checked)
+
+Read Models and Training Guidelines.pdf from the supplied PathSnap_student_materials
+folder. It requires explicit state/candidate mapping, emission/transition choices,
+Viterbi recurrence, missing/invalid/gap handling, per-observation predictions, and
+classifier-only versus HMM comparisons including point accuracy, sequence metrics,
+and continuity. These are covered here and in batch results, subject to the mock
+classifier limitation. Final compliance still requires repeating the comparison
+with 496's selected model outputs consistently used as emissions.
+
+Recurrence: V_t(j) = log(max(prob_t(j), 1e-300)) +
+max_i[V_(t-1)(i) + T(i,j)]. Store each maximizing i and backtrack from the final
+maximum. Subtract the maximum of each score vector for numerical stability; this
+does not alter the maximizing path. At a reset, begin with the current emissions.
+Candidates retain their original arc_id; returned IDs are not candidate positions.
+
+The model is a chain with unnormalised compatibility potentials rather than a
+calibrated generative HMM. Fixed potentials explicitly favour road adjacency;
+the optional distance model estimates realistic movement but was weaker in these
+experiments. Missing observations produce -1, and both sides decode independently.
+Invalid graph transitions remain possible under a finite penalty so a poor candidate
+set cannot make the entire sequence impossible. Sequence exact-50 scores are the
+fraction of non-overlapping 50-point windows entirely matching derived reference
+labels, and unlike point accuracy they are not masked by has_positive.
+
