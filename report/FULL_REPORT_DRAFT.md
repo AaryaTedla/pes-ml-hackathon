@@ -5,7 +5,7 @@
 Team: PES1UG24CS497, PES1UG24CS496, PES1UG24CS549, PES1UG24CS548
 Repository: https://github.com/AaryaTedla/pes-ml-hackathon
 
-> Items marked **[NEEDED: ...]** require evidence only the team can supply (screenshots from the demo laptops, AI-use statements).
+> The bracketed entries in section 8 (AI-use disclosure) must be completed by each member.
 > Every number comes from a committed result file; see `report/numbers_sheet.md`.
 
 ## 1. Problem and system overview
@@ -593,7 +593,14 @@ Accuracy is measured against the reference route aligned to the GPS points, whic
 
 *Figure 7-A (2/2): the same run, with the legend and the Run Notes: prediction method `classifier + HMM/Viterbi` and the Request id that appears in the API terminal log (Figure 7-B)*
 
-**[NEEDED: Figure 7-B]** Laptop 1 API terminal showing the matching request id, the second laptop's client IP, trip, number of points, time and accuracy.
+
+![Figure 7-B: the API terminal on laptop 1 in the final mode (`READY mode=classifier + HMM/Viterbi trips=10 data=...evaluator_test`) after the 10 evaluator trips were requested. Each `REQUEST` line shows the trip, number of points, time and accuracy, followed by `POST /predict ... 200 OK`. In this capture the requests came from laptop 1 itself (client 127.0.0.1); when a second laptop calls the API, its address appears on the `INFO:` line in the same format.](../results/figures/demo_terminal_api_log_evaluator_trips.png)
+
+*Figure 7-B: the API terminal on laptop 1 in the final mode (`READY mode=classifier + HMM/Viterbi trips=10 data=...evaluator_test`) after the 10 evaluator trips were requested. Each `REQUEST` line shows the trip, number of points, time and accuracy, followed by `POST /predict ... 200 OK`. In this capture the requests came from laptop 1 itself (client 127.0.0.1); when a second laptop calls the API, its address appears on the `INFO:` line in the same format.*
+
+![Figure 7-C: the UI after running each of the 10 evaluator trips in the final mode, one panel per trip (metrics cards and the map with the predicted route). Captured in a browser on laptop 1 against the API; every run reports the pipeline `classifier + HMM/Viterbi`.](../results/figures/demo_ui_all_10_trips.png)
+
+*Figure 7-C: the UI after running each of the 10 evaluator trips in the final mode, one panel per trip (metrics cards and the map with the predicted route). Captured in a browser on laptop 1 against the API; every run reports the pipeline `classifier + HMM/Viterbi`.*
 
 Reproduce: `python -m uvicorn api.main:app --host 0.0.0.0 --port 8000` with `PATHSNAP_MODE=hmm`; set `PATHSNAP_TRIPS_DIR` to the folder with the evaluation trips.
 A Windows firewall rule for TCP port 8000 and a shared network are required; `scripts/check_all_trips.py --api http://<laptop-1-ip>:8000` checks all trips from the second laptop.

@@ -27,7 +27,7 @@ HEADER = """# PathSnap: Distributed Map-Matching and Route Reconstruction
 Team: PES1UG24CS497, PES1UG24CS496, PES1UG24CS549, PES1UG24CS548
 Repository: https://github.com/AaryaTedla/pes-ml-hackathon
 
-> Items marked **[NEEDED: ...]** require evidence only the team can supply (screenshots from the demo laptops, AI-use statements).
+> The bracketed entries in section 8 (AI-use disclosure) must be completed by each member.
 > Every number comes from a committed result file; see `report/numbers_sheet.md`.
 
 ## 1. Problem and system overview
@@ -155,11 +155,23 @@ def main():
                 + "\n" + sec7[b7:])
         sec7 = sec7.replace("| Final-mode demonstration on laptop 2 | **[NEEDED: repeat with `PATHSNAP_MODE=hmm` and capture the screenshots below]** |",
                             "| Final-mode demonstration on laptop 2 | Done: a second laptop opened the UI served by laptop 1 and ran the evaluator trips; see Figure 7-A |")
+    term_local = os.path.join(ROOT, "results", "figures", "demo_terminal_api_log_evaluator_trips.png")
+    sheet = os.path.join(ROOT, "results", "figures", "demo_ui_all_10_trips.png")
+    extra = ""
     if os.path.exists(term):
+        extra += img("results/figures/demo_terminal_trip00000015.png", "Figure 7-B: laptop 1's API terminal showing the matching `REQUEST id=...` line (trip, points, time, accuracy) and the second laptop's client IP")
+    elif os.path.exists(term_local):
+        extra += img("results/figures/demo_terminal_api_log_evaluator_trips.png",
+                     "Figure 7-B: the API terminal on laptop 1 in the final mode (`READY mode=classifier + HMM/Viterbi trips=10 data=...evaluator_test`) after the 10 evaluator trips were requested. "
+                     "Each `REQUEST` line shows the trip, number of points, time and accuracy, followed by `POST /predict ... 200 OK`. In this capture the requests came from laptop 1 itself (client 127.0.0.1); "
+                     "when a second laptop calls the API, its address appears on the `INFO:` line in the same format.")
+    if os.path.exists(sheet):
+        extra += img("results/figures/demo_ui_all_10_trips.png",
+                     "Figure 7-C: the UI after running each of the 10 evaluator trips in the final mode, one panel per trip (metrics cards and the map with the predicted route). "
+                     "Captured in a browser on laptop 1 against the API; every run reports the pipeline `classifier + HMM/Viterbi`.")
+    if extra:
         a7 = sec7.index("**[NEEDED: Figure 7-B]**"); b7 = sec7.index("Reproduce:")
-        sec7 = (sec7[:a7]
-                + img("results/figures/demo_terminal_trip00000015.png", "Figure 7-B: laptop 1's API terminal showing the matching `REQUEST id=...` line (trip, points, time, accuracy) and the second laptop's client IP")
-                + "\n" + sec7[b7:])
+        sec7 = sec7[:a7] + extra + "\n" + sec7[b7:]
     parts.append(sec7)
     parts.append(SEC8)
     md = "\n\n".join(parts)
